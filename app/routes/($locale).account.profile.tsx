@@ -8,7 +8,7 @@ import {
   useNavigation,
   useOutletContext,
 } from 'react-router';
-import type {Route} from './+types/account.profile';
+import type {Route} from './+types/($locale).account.profile';
 
 export type ActionResponse = {
   error: string | null;
@@ -16,7 +16,7 @@ export type ActionResponse = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Profile'}];
+  return [{title: 'Perfil'}];
 };
 
 export async function loader({context}: Route.LoaderArgs) {
@@ -29,7 +29,7 @@ export async function action({request, context}: Route.ActionArgs) {
   const {customerAccount} = context;
 
   if (request.method !== 'PUT') {
-    return data({error: 'Method not allowed'}, {status: 405});
+    return data({error: 'M\u00e9todo no permitido'}, {status: 405});
   }
 
   const form = await request.formData();
@@ -62,7 +62,7 @@ export async function action({request, context}: Route.ActionArgs) {
     }
 
     if (!data?.customerUpdate?.customer) {
-      throw new Error('Customer profile update failed.');
+      throw new Error('No se pudo actualizar el perfil.');
     }
 
     return {
@@ -86,46 +86,71 @@ export default function AccountProfile() {
   const customer = action?.customer ?? account?.customer;
 
   return (
-    <div className="account-profile">
-      <h2>My profile</h2>
-      <br />
-      <Form method="PUT">
-        <legend>Personal information</legend>
-        <fieldset>
-          <label htmlFor="firstName">First name</label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            autoComplete="given-name"
-            placeholder="First name"
-            aria-label="First name"
-            defaultValue={customer.firstName ?? ''}
-            minLength={2}
-          />
-          <label htmlFor="lastName">Last name</label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            autoComplete="family-name"
-            placeholder="Last name"
-            aria-label="Last name"
-            defaultValue={customer.lastName ?? ''}
-            minLength={2}
-          />
+    <div className="flex flex-col gap-6">
+      <div>
+        <h2 className="text-lg font-extrabold uppercase tracking-tight">
+          Perfil
+        </h2>
+        <p className="mt-1 text-sm font-normal normal-case text-dark/70">
+          Actualiza tu informaci&oacute;n personal.
+        </p>
+      </div>
+
+      <Form method="PUT" className="flex flex-col gap-4">
+        <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="firstName"
+              className="text-xs font-extrabold uppercase tracking-tight text-tgray"
+            >
+              Nombre
+            </label>
+            <input
+              id="firstName"
+              name="firstName"
+              type="text"
+              autoComplete="given-name"
+              placeholder="Nombre"
+              aria-label="Nombre"
+              defaultValue={customer.firstName ?? ''}
+              minLength={2}
+              className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="lastName"
+              className="text-xs font-extrabold uppercase tracking-tight text-tgray"
+            >
+              Apellido
+            </label>
+            <input
+              id="lastName"
+              name="lastName"
+              type="text"
+              autoComplete="family-name"
+              placeholder="Apellido"
+              aria-label="Apellido"
+              defaultValue={customer.lastName ?? ''}
+              minLength={2}
+              className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
         </fieldset>
+
         {action?.error ? (
-          <p>
-            <mark>
-              <small>{action.error}</small>
-            </mark>
+          <p className="text-sm font-normal normal-case text-red-600">
+            {action.error}
           </p>
-        ) : (
-          <br />
-        )}
-        <button type="submit" disabled={state !== 'idle'}>
-          {state !== 'idle' ? 'Updating' : 'Update'}
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={state !== 'idle'}
+          className="rounded-lg border border-primary bg-primary px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light transition-colors hover:border-dark hover:bg-dark disabled:opacity-60"
+        >
+          {state !== 'idle' ? 'Actualizando…' : 'Actualizar'}
         </button>
       </Form>
     </div>

@@ -1,5 +1,5 @@
 import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/products.$handle';
+import type {Route} from './+types/($locale).products.$handle';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -15,7 +15,7 @@ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {title: `Translate3D | ${data?.product.title ?? ''}`},
     {
       rel: 'canonical',
       href: `/products/${data?.product.handle}`,
@@ -42,7 +42,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {storefront} = context;
 
   if (!handle) {
-    throw new Error('Expected product handle to be defined');
+    throw new Error('Se esperaba un handle de producto');
   }
 
   const [{product}] = await Promise.all([
@@ -98,28 +98,41 @@ export default function Product() {
   const {title, descriptionHtml} = product;
 
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
-          price={selectedVariant?.price}
-          compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
-          productOptions={productOptions}
-          selectedVariant={selectedVariant}
-        />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+    <section className="mx-auto w-full max-w-6xl px-5 py-12 text-dark">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+        <ProductImage image={selectedVariant?.image} />
+
+        <div className="flex flex-col">
+          <h1 className="text-[clamp(1.75rem,3vw,2.75rem)] font-extrabold leading-[1.05] tracking-tight">
+            {title}
+          </h1>
+
+          <div className="mt-4">
+            <ProductPrice
+              price={selectedVariant?.price}
+              compareAtPrice={selectedVariant?.compareAtPrice}
+            />
+          </div>
+
+          <div className="mt-6 rounded-lg border border-dark/10 bg-light p-4">
+            <ProductForm
+              productOptions={productOptions}
+              selectedVariant={selectedVariant}
+            />
+          </div>
+
+          <div className="mt-10 border-t border-dark/10 pt-6">
+            <h2 className="text-xs font-extrabold uppercase tracking-tight text-tgray">
+              Descripci&oacute;n
+            </h2>
+            <div
+              className="mt-4 text-base leading-relaxed text-dark/80 [&_a]:text-primary [&_a:hover]:text-dark [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-4"
+              dangerouslySetInnerHTML={{__html: descriptionHtml}}
+            />
+          </div>
+        </div>
       </div>
+
       <Analytics.ProductView
         data={{
           products: [
@@ -135,7 +148,7 @@ export default function Product() {
           ],
         }}
       />
-    </div>
+    </section>
   );
 }
 

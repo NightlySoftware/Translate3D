@@ -1,6 +1,186 @@
-/**
- * Configure Tailwind v4 in this file using CSS variables and directives:
- * https://tailwindcss.com/docs/v4-beta#css-first-configuration
- */
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@import 'tailwindcss';
+/* shadcn/ui Tailwind v4 setup */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Brand */
+  --brand-primary: #db3300;
+  --brand-dark: #0b0604;
+  --brand-light: #ffffff;
+  --brand-gray: #8a8a8a;
+  --brand-lightgray: #dddddd;
+
+  /* shadcn theme tokens */
+  --background: var(--brand-light);
+  --foreground: var(--brand-dark);
+  --card: var(--brand-light);
+  --card-foreground: var(--brand-dark);
+  --popover: var(--brand-light);
+  --popover-foreground: var(--brand-dark);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--brand-light);
+  --secondary: var(--brand-light);
+  --secondary-foreground: var(--brand-dark);
+  --muted: var(--brand-lightgray);
+  --muted-foreground: var(--brand-gray);
+  --accent: var(--brand-dark);
+  --accent-foreground: var(--brand-light);
+  --destructive: #dc2626;
+  --destructive-foreground: var(--brand-light);
+  --border: color-mix(in srgb, var(--brand-dark) 18%, transparent);
+  --input: color-mix(in srgb, var(--brand-dark) 18%, transparent);
+  --ring: color-mix(in srgb, var(--brand-primary) 65%, transparent);
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: var(--brand-dark);
+  --foreground: var(--brand-light);
+  --card: color-mix(in srgb, var(--brand-dark) 92%, #111);
+  --card-foreground: var(--brand-light);
+  --popover: color-mix(in srgb, var(--brand-dark) 92%, #111);
+  --popover-foreground: var(--brand-light);
+  --secondary: color-mix(in srgb, var(--brand-dark) 80%, #111);
+  --secondary-foreground: var(--brand-light);
+  --muted: color-mix(in srgb, var(--brand-dark) 75%, #111);
+  --muted-foreground: color-mix(in srgb, var(--brand-light) 70%, transparent);
+  --accent: var(--brand-light);
+  --accent-foreground: var(--brand-dark);
+  --border: color-mix(in srgb, var(--brand-light) 18%, transparent);
+  --input: color-mix(in srgb, var(--brand-light) 18%, transparent);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Extra brand aliases for Tailwind utilities like bg-dark / text-light */
+  --color-dark: var(--brand-dark);
+  --color-light: var(--brand-light);
+  --color-tgray: var(--brand-gray);
+  --color-lightgray: var(--brand-lightgray);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background text-foreground;
+  }
+  body {
+    font-family:
+      "Manrope",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+::selection {
+  background: var(--brand-primary);
+  color: var(--brand-light);
+}
+
+/* Minimal link underline variants (ported from old UI) */
+.link-light,
+.link-dark,
+.link-action {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
+.link-light::after,
+.link-dark::after,
+.link-action::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.25s ease-out;
+}
+
+.link-light:hover::after,
+.link-dark:hover::after,
+.link-action:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.link-light::after {
+  background-color: color-mix(in srgb, var(--brand-light) 90%, transparent);
+}
+
+.link-dark::after {
+  background-color: var(--brand-dark);
+}
+
+.link-action::after {
+  background-color: var(--brand-primary);
+}
+
+/* Background pattern used on landing 3D section */
+.cross-dot-pattern {
+  background-image:
+    linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+    linear-gradient(to bottom, #e5e5e5 1px, transparent 1px);
+  background-size: 40px 40px;
+  position: relative;
+}
+
+.cross-dot-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #e5e5e5 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 20px 20px;
+  pointer-events: none;
+}
+
+/* Landing marquee animation (duration is provided via CSS variable) */
+@keyframes landing-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-landing-marquee {
+  animation: landing-marquee var(--marquee-duration, 24s) linear infinite;
+}

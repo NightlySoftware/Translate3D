@@ -7,16 +7,19 @@ export function ProductImage({
   image: ProductVariantFragment['image'];
 }) {
   if (!image) {
-    return <div className="product-image" />;
+    return (
+      <div className="aspect-square w-full overflow-hidden rounded-lg border border-dark/10 bg-lightgray" />
+    );
   }
   return (
-    <div className="product-image">
+    <div className="aspect-square w-full overflow-hidden rounded-lg border border-dark/10 bg-lightgray">
       <Image
-        alt={image.altText || 'Product Image'}
+        alt={image.altText || 'Imagen del producto'}
         aspectRatio="1/1"
         data={image}
         key={image.id}
         sizes="(min-width: 45em) 50vw, 100vw"
+        className="h-full w-full object-cover"
       />
     </div>
   );

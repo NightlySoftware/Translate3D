@@ -1,5 +1,5 @@
 import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/account.orders.$id';
+import type {Route} from './+types/($locale).account.orders.$id';
 import {Money, Image} from '@shopify/hydrogen';
 import type {
   OrderLineItemFullFragment,
@@ -8,7 +8,7 @@ import type {
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Order ${data?.order?.name}`}];
+  return [{title: `Pedido ${data?.order?.name}`}];
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
@@ -27,7 +27,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
     });
 
   if (errors?.length || !data?.order) {
-    throw new Error('Order not found');
+    throw new Error('Pedido no encontrado');
   }
 
   const {order} = data;
@@ -81,115 +81,139 @@ export default function OrderRoute() {
     discountPercentage,
     fulfillmentStatus,
   } = useLoaderData<typeof loader>();
+
+  const processedDate = order.processedAt
+    ? new Date(order.processedAt).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : '';
+
   return (
-    <div className="account-order">
-      <h2>Order {order.name}</h2>
-      <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
-      {order.confirmationNumber && (
-        <p>Confirmation: {order.confirmationNumber}</p>
-      )}
-      <br />
+    <div className="flex flex-col gap-8">
       <div>
-        <table>
-          <thead>
+        <h2 className="text-lg font-extrabold uppercase tracking-tight">
+          Pedido {order.name}
+        </h2>
+        <p className="mt-1 text-sm font-normal normal-case text-dark/70">
+          Realizado el {processedDate}
+        </p>
+        {order.confirmationNumber ? (
+          <p className="mt-2 text-sm font-normal normal-case text-dark/70">
+            Confirmaci&oacute;n: {order.confirmationNumber}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="overflow-auto rounded-2xl border border-dark/10 bg-light">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead className="bg-lightgray text-xs font-extrabold uppercase tracking-tight text-tgray">
             <tr>
-              <th scope="col">Product</th>
-              <th scope="col">Price</th>
-              <th scope="col">Quantity</th>
-              <th scope="col">Total</th>
+              <th scope="col" className="px-4 py-3">
+                Producto
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Precio
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Cantidad
+              </th>
+              <th scope="col" className="px-4 py-3">
+                Total
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-dark/10">
             {lineItems.map((lineItem, lineItemIndex) => (
               // eslint-disable-next-line react/no-array-index-key
               <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
             ))}
           </tbody>
-          <tfoot>
-            {((discountValue && discountValue.amount) ||
-              discountPercentage) && (
-              <tr>
-                <th scope="row" colSpan={3}>
-                  <p>Discounts</p>
+          <tfoot className="bg-white">
+            {((discountValue && discountValue.amount) || discountPercentage) ? (
+              <tr className="border-t border-dark/10">
+                <th scope="row" className="px-4 py-3" colSpan={3}>
+                  Descuentos
                 </th>
-                <th scope="row">
-                  <p>Discounts</p>
-                </th>
-                <td>
+                <td className="px-4 py-3 font-semibold text-dark">
                   {discountPercentage ? (
-                    <span>-{discountPercentage}% OFF</span>
-                  ) : (
-                    discountValue && <Money data={discountValue!} />
-                  )}
+                    <span>-{discountPercentage}%</span>
+                  ) : discountValue ? (
+                    <Money data={discountValue} />
+                  ) : null}
                 </td>
               </tr>
-            )}
-            <tr>
-              <th scope="row" colSpan={3}>
-                <p>Subtotal</p>
+            ) : null}
+            <tr className="border-t border-dark/10">
+              <th scope="row" className="px-4 py-3" colSpan={3}>
+                Subtotal
               </th>
-              <th scope="row">
-                <p>Subtotal</p>
-              </th>
-              <td>
+              <td className="px-4 py-3 font-semibold text-dark">
                 <Money data={order.subtotal!} />
               </td>
             </tr>
-            <tr>
-              <th scope="row" colSpan={3}>
-                Tax
+            <tr className="border-t border-dark/10">
+              <th scope="row" className="px-4 py-3" colSpan={3}>
+                Impuestos
               </th>
-              <th scope="row">
-                <p>Tax</p>
-              </th>
-              <td>
+              <td className="px-4 py-3 font-semibold text-dark">
                 <Money data={order.totalTax!} />
               </td>
             </tr>
-            <tr>
-              <th scope="row" colSpan={3}>
+            <tr className="border-t border-dark/10">
+              <th scope="row" className="px-4 py-3" colSpan={3}>
                 Total
               </th>
-              <th scope="row">
-                <p>Total</p>
-              </th>
-              <td>
+              <td className="px-4 py-3 font-extrabold text-dark">
                 <Money data={order.totalPrice!} />
               </td>
             </tr>
           </tfoot>
         </table>
-        <div>
-          <h3>Shipping Address</h3>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-dark/10 bg-light p-6">
+          <h3 className="text-xs font-extrabold uppercase tracking-tight text-tgray">
+            Direcci&oacute;n de env&iacute;o
+          </h3>
           {order?.shippingAddress ? (
-            <address>
-              <p>{order.shippingAddress.name}</p>
+            <address className="mt-3 not-italic text-sm font-normal normal-case text-dark/80">
+              <p className="font-semibold text-dark">{order.shippingAddress.name}</p>
               {order.shippingAddress.formatted ? (
                 <p>{order.shippingAddress.formatted}</p>
-              ) : (
-                ''
-              )}
+              ) : null}
               {order.shippingAddress.formattedArea ? (
                 <p>{order.shippingAddress.formattedArea}</p>
-              ) : (
-                ''
-              )}
+              ) : null}
             </address>
           ) : (
-            <p>No shipping address defined</p>
+            <p className="mt-3 text-sm font-normal normal-case text-dark/70">
+              No hay direcci&oacute;n de env&iacute;o definida.
+            </p>
           )}
-          <h3>Status</h3>
-          <div>
-            <p>{fulfillmentStatus}</p>
-          </div>
+        </div>
+
+        <div className="rounded-2xl border border-dark/10 bg-light p-6">
+          <h3 className="text-xs font-extrabold uppercase tracking-tight text-tgray">
+            Estado
+          </h3>
+          <p className="mt-3 text-sm font-semibold text-dark">
+            {fulfillmentStatus}
+          </p>
+          {order.statusPageUrl ? (
+            <a
+              target="_blank"
+              href={order.statusPageUrl}
+              rel="noreferrer"
+              className="mt-4 inline-flex text-sm font-extrabold uppercase tracking-tight text-primary hover:text-dark"
+            >
+              Ver estatus del pedido →
+            </a>
+          ) : null}
         </div>
       </div>
-      <br />
-      <p>
-        <a target="_blank" href={order.statusPageUrl} rel="noreferrer">
-          View Order Status →
-        </a>
-      </p>
     </div>
   );
 }
@@ -198,23 +222,23 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
   return (
     <tr key={lineItem.id}>
       <td>
-        <div>
+        <div className="flex items-start gap-3 px-4 py-3">
           {lineItem?.image && (
-            <div>
+            <div className="h-16 w-16 overflow-hidden rounded-md border border-dark/10 bg-lightgray">
               <Image data={lineItem.image} width={96} height={96} />
             </div>
           )}
-          <div>
-            <p>{lineItem.title}</p>
-            <small>{lineItem.variantTitle}</small>
+          <div className="flex flex-col">
+            <p className="font-semibold text-dark">{lineItem.title}</p>
+            <small className="text-dark/70">{lineItem.variantTitle}</small>
           </div>
         </div>
       </td>
-      <td>
+      <td className="px-4 py-3">
         <Money data={lineItem.price!} />
       </td>
-      <td>{lineItem.quantity}</td>
-      <td>
+      <td className="px-4 py-3">{lineItem.quantity}</td>
+      <td className="px-4 py-3">
         <Money data={lineItem.totalDiscount!} />
       </td>
     </tr>

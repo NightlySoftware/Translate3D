@@ -35,8 +35,8 @@ export function CartLineItem({
   const childrenLabelId = `cart-line-children-${id}`;
 
   return (
-    <li key={id} className="cart-line">
-      <div className="cart-line-inner">
+    <li key={id} className="rounded-lg border border-dark/10 bg-light p-3">
+      <div className="flex items-start gap-4">
         {image && (
           <Image
             alt={title}
@@ -45,10 +45,11 @@ export function CartLineItem({
             height={100}
             loading="lazy"
             width={100}
+            className="rounded-lg border border-dark/10"
           />
         )}
 
-        <div>
+        <div className="flex-1">
           <Link
             prefetch="intent"
             to={lineItemUrl}
@@ -58,30 +59,34 @@ export function CartLineItem({
               }
             }}
           >
-            <p>
-              <strong>{product.title}</strong>
+            <p className="text-sm font-extrabold uppercase tracking-tight text-dark hover:text-primary">
+              {product.title}
             </p>
           </Link>
-          <ProductPrice price={line?.cost?.totalAmount} />
-          <ul>
+          <div className="mt-1 text-sm font-semibold text-dark">
+            <ProductPrice price={line?.cost?.totalAmount} />
+          </div>
+          <ul className="mt-2 flex flex-col gap-1">
             {selectedOptions.map((option) => (
               <li key={option.name}>
-                <small>
+                <small className="text-xs font-semibold uppercase tracking-tight text-tgray">
                   {option.name}: {option.value}
                 </small>
               </li>
             ))}
           </ul>
-          <CartLineQuantity line={line} />
+          <div className="mt-3">
+            <CartLineQuantity line={line} />
+          </div>
         </div>
       </div>
 
       {lineItemChildren ? (
-        <div>
+        <div className="mt-3 border-t border-dark/10 pt-3">
           <p id={childrenLabelId} className="sr-only">
             Line items with {product.title}
           </p>
-          <ul aria-labelledby={childrenLabelId} className="cart-line-children">
+          <ul aria-labelledby={childrenLabelId} className="flex flex-col gap-3">
             {lineItemChildren.map((childLine) => (
               <CartLineItem
                 childrenMap={childrenMap}
@@ -109,30 +114,32 @@ function CartLineQuantity({line}: {line: CartLine}) {
   const nextQuantity = Number((quantity + 1).toFixed(0));
 
   return (
-    <div className="cart-line-quantity">
-      <small>Quantity: {quantity} &nbsp;&nbsp;</small>
+    <div className="flex items-center gap-3">
+      <small className="text-xs font-extrabold uppercase tracking-tight text-tgray">
+        Cantidad: {quantity}
+      </small>
       <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
-          aria-label="Decrease quantity"
+          aria-label="Disminuir cantidad"
           disabled={quantity <= 1 || !!isOptimistic}
           name="decrease-quantity"
           value={prevQuantity}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light disabled:opacity-40"
         >
           <span>&#8722; </span>
         </button>
       </CartLineUpdateButton>
-      &nbsp;
       <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
         <button
-          aria-label="Increase quantity"
+          aria-label="Aumentar cantidad"
           name="increase-quantity"
           value={nextQuantity}
           disabled={!!isOptimistic}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light disabled:opacity-40"
         >
           <span>&#43;</span>
         </button>
       </CartLineUpdateButton>
-      &nbsp;
       <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} />
     </div>
   );
@@ -157,8 +164,12 @@ function CartLineRemoveButton({
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
-      <button disabled={disabled} type="submit">
-        Remove
+      <button
+        disabled={disabled}
+        type="submit"
+        className="ml-auto inline-flex h-9 items-center justify-center rounded-lg border border-dark/10 bg-light px-3 text-xs font-extrabold uppercase tracking-tight text-dark hover:bg-dark hover:text-light disabled:opacity-40"
+      >
+        Quitar
       </button>
     </CartForm>
   );

@@ -4,6 +4,7 @@ node_modules
 /dist
 /public/build
 /.mf
+*.tsbuildinfo
 .env
 .shopify
 .react-router

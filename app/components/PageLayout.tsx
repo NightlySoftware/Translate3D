@@ -37,28 +37,31 @@ export function PageLayout({
       <CartAside cart={cart} />
       <SearchAside />
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-      {header && (
-        <Header
+
+      <div className="min-h-screen bg-background text-foreground">
+        {header && (
+          <Header
+            header={header}
+            cart={cart}
+            isLoggedIn={isLoggedIn}
+            publicStoreDomain={publicStoreDomain}
+          />
+        )}
+        <main className="pt-20">{children}</main>
+        <Footer
+          footer={footer}
           header={header}
-          cart={cart}
-          isLoggedIn={isLoggedIn}
           publicStoreDomain={publicStoreDomain}
         />
-      )}
-      <main>{children}</main>
-      <Footer
-        footer={footer}
-        header={header}
-        publicStoreDomain={publicStoreDomain}
-      />
+      </div>
     </Aside.Provider>
   );
 }
 
 function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   return (
-    <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
+    <Aside type="cart" heading="Carrito">
+      <Suspense fallback={<p className="text-sm font-semibold uppercase text-tgray">Cargando carrito…</p>}>
         <Await resolve={cart}>
           {(cart) => {
             return <CartMain cart={cart} layout="aside" />;
@@ -72,23 +75,28 @@ function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
 function SearchAside() {
   const queriesDatalistId = useId();
   return (
-    <Aside type="search" heading="SEARCH">
-      <div className="predictive-search">
-        <br />
-        <SearchFormPredictive>
+    <Aside type="search" heading="Buscar">
+      <div className="flex flex-col gap-4">
+        <SearchFormPredictive className="flex flex-col gap-3">
           {({fetchResults, goToSearch, inputRef}) => (
             <>
               <input
                 name="q"
                 onChange={fetchResults}
                 onFocus={fetchResults}
-                placeholder="Search"
+                placeholder="Buscar"
                 ref={inputRef}
                 type="search"
                 list={queriesDatalistId}
+                className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-base font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
-              &nbsp;
-              <button onClick={goToSearch}>Search</button>
+              <button
+                type="button"
+                onClick={goToSearch}
+                className="w-full rounded-lg border border-dark bg-dark px-4 py-3 text-sm font-extrabold uppercase tracking-tight text-light hover:bg-primary hover:border-primary"
+              >
+                Buscar
+              </button>
             </>
           )}
         </SearchFormPredictive>
@@ -98,7 +106,11 @@ function SearchAside() {
             const {articles, collections, pages, products, queries} = items;
 
             if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
+              return (
+                <div className="text-sm font-semibold uppercase text-tgray">
+                  Cargando…
+                </div>
+              );
             }
 
             if (!total) {
@@ -136,9 +148,8 @@ function SearchAside() {
                     onClick={closeSearch}
                     to={`${SEARCH_ENDPOINT}?q=${term.current}`}
                   >
-                    <p>
-                      View all results for <q>{term.current}</q>
-                      &nbsp; →
+                    <p className="mt-4 text-sm font-extrabold uppercase tracking-tight text-primary">
+                      Ver todos los resultados para <q>{term.current}</q> →
                     </p>
                   </Link>
                 ) : null}
@@ -161,7 +172,7 @@ function MobileMenuAside({
   return (
     header.menu &&
     header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
+      <Aside type="mobile" heading="Men\u00fa">
         <HeaderMenu
           menu={header.menu}
           viewport="mobile"

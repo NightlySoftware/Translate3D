@@ -1,12 +1,12 @@
 import {Link, useLoaderData} from 'react-router';
-import type {Route} from './+types/blogs.$blogHandle._index';
+import type {Route} from './+types/($locale).blogs.$blogHandle._index';
 import {Image, getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.blog.title ?? ''} blog`}];
+  return [{title: `Translate3D | ${data?.blog.title ?? 'Blog'}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -65,10 +65,15 @@ export default function Blog() {
   const {articles} = blog;
 
   return (
-    <div className="blog">
-      <h1>{blog.title}</h1>
-      <div className="blog-grid">
-        <PaginatedResourceSection<ArticleItemFragment> connection={articles}>
+    <div className="mx-auto w-full max-w-6xl px-5 py-16">
+      <h1 className="text-[clamp(2.25rem,5vw,4rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+        {blog.title}
+      </h1>
+      <div className="mt-10">
+        <PaginatedResourceSection<ArticleItemFragment>
+          connection={articles}
+          resourcesClassName="grid grid-cols-1 gap-6 md:grid-cols-2"
+        >
           {({node: article, index}) => (
             <ArticleItem
               article={article}
@@ -89,29 +94,38 @@ function ArticleItem({
   article: ArticleItemFragment;
   loading?: HTMLImageElement['loading'];
 }) {
-  const publishedAt = new Intl.DateTimeFormat('en-US', {
+  const publishedAt = new Intl.DateTimeFormat('es-MX', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   }).format(new Date(article.publishedAt!));
   return (
-    <div className="blog-article" key={article.id}>
-      <Link to={`/blogs/${article.blog.handle}/${article.handle}`}>
-        {article.image && (
-          <div className="blog-article-image">
-            <Image
-              alt={article.image.altText || article.title}
-              aspectRatio="3/2"
-              data={article.image}
-              loading={loading}
-              sizes="(min-width: 768px) 50vw, 100vw"
-            />
-          </div>
-        )}
-        <h3>{article.title}</h3>
-        <small>{publishedAt}</small>
-      </Link>
-    </div>
+    <Link
+      to={`/blogs/${article.blog.handle}/${article.handle}`}
+      prefetch="intent"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light"
+    >
+      {article.image ? (
+        <div className="overflow-hidden border-b border-dark/10">
+          <Image
+            alt={article.image.altText || article.title}
+            aspectRatio="3/2"
+            data={article.image}
+            loading={loading}
+            sizes="(min-width: 768px) 50vw, 100vw"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+      ) : null}
+      <div className="flex flex-1 flex-col gap-2 p-5">
+        <h3 className="text-base font-extrabold uppercase leading-[1.1] tracking-tight">
+          {article.title}
+        </h3>
+        <small className="text-xs font-semibold uppercase tracking-tight text-tgray group-hover:text-light/70">
+          {publishedAt}
+        </small>
+      </div>
+    </Link>
   );
 }
 

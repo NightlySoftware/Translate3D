@@ -1,4 +1,4 @@
-import type {Route} from './+types/collections.all';
+import type {Route} from './+types/($locale).collections.all';
 import {useLoaderData} from 'react-router';
 import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
@@ -6,7 +6,7 @@ import {ProductItem} from '~/components/ProductItem';
 import type {CollectionItemFragment} from 'storefrontapi.generated';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Products`}];
+  return [{title: 'Translate3D | Productos'}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -51,21 +51,25 @@ export default function Collection() {
   const {products} = useLoaderData<typeof loader>();
 
   return (
-    <div className="collection">
-      <h1>Products</h1>
-      <PaginatedResourceSection<CollectionItemFragment>
-        connection={products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
-    </div>
+    <section className="mx-auto w-full max-w-6xl px-5 py-12 text-dark">
+      <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+        Productos
+      </h1>
+      <div className="mt-10">
+        <PaginatedResourceSection<CollectionItemFragment>
+          connection={products}
+          resourcesClassName="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {({node: product, index}) => (
+            <ProductItem
+              key={product.id}
+              product={product}
+              loading={index < 8 ? 'eager' : undefined}
+            />
+          )}
+        </PaginatedResourceSection>
+      </div>
+    </section>
   );
 }
 

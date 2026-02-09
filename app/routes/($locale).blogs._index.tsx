@@ -1,5 +1,5 @@
 import {Link, useLoaderData} from 'react-router';
-import type {Route} from './+types/blogs._index';
+import type {Route} from './+types/($locale).blogs._index';
 import {getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import type {BlogsQuery} from 'storefrontapi.generated';
@@ -7,7 +7,7 @@ import type {BlogsQuery} from 'storefrontapi.generated';
 type BlogNode = BlogsQuery['blogs']['nodes'][0];
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Blogs`}];
+  return [{title: 'Translate3D | Blogs'}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -54,23 +54,28 @@ export default function Blogs() {
   const {blogs} = useLoaderData<typeof loader>();
 
   return (
-    <div className="blogs">
-      <h1>Blogs</h1>
-      <div className="blogs-grid">
+    <section className="mx-auto w-full max-w-5xl px-5 py-16 text-dark">
+      <h1 className="text-[clamp(2.25rem,5vw,4rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+        Blogs
+      </h1>
+
+      <div className="mt-10 flex flex-col gap-4">
         <PaginatedResourceSection<BlogNode> connection={blogs}>
           {({node: blog}) => (
             <Link
-              className="blog"
               key={blog.handle}
               prefetch="intent"
               to={`/blogs/${blog.handle}`}
+              className="rounded-2xl border border-dark/10 bg-light p-6 transition-colors hover:border-primary"
             >
-              <h2>{blog.title}</h2>
+              <h2 className="text-lg font-extrabold uppercase tracking-tight">
+                {blog.title}
+              </h2>
             </Link>
           )}
         </PaginatedResourceSection>
       </div>
-    </div>
+    </section>
   );
 }
 

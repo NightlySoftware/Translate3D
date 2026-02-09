@@ -1,5 +1,5 @@
 import {useLoaderData} from 'react-router';
-import type {Route} from './+types/search';
+import type {Route} from './+types/($locale).search';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
@@ -14,7 +14,7 @@ import type {
 } from 'storefrontapi.generated';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Search`}];
+  return [{title: `Translate3D | Buscar`}];
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
@@ -41,24 +41,36 @@ export default function SearchPage() {
   if (type === 'predictive') return null;
 
   return (
-    <div className="search">
-      <h1>Search</h1>
-      <SearchForm>
+    <div className="mx-auto w-full max-w-5xl px-5 py-16">
+      <h1 className="text-[clamp(2.25rem,5vw,4rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+        Buscar
+      </h1>
+      <div className="mt-6 rounded-2xl border border-dark/10 bg-light p-6">
+        <SearchForm>
         {({inputRef}) => (
-          <>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               defaultValue={term}
               name="q"
-              placeholder="Search…"
+              placeholder="Buscar…"
               ref={inputRef}
               type="search"
+              className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
-            &nbsp;
-            <button type="submit">Search</button>
-          </>
+            <button
+              type="submit"
+              className="rounded-lg border border-dark bg-dark px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary"
+            >
+              Buscar
+            </button>
+          </div>
         )}
       </SearchForm>
-      {error && <p style={{color: 'red'}}>{error}</p>}
+      {error && (
+        <p className="mt-4 text-sm font-semibold normal-case text-red-600">
+          {error}
+        </p>
+      )}
       {!term || !result?.total ? (
         <SearchResults.Empty />
       ) : (
@@ -72,6 +84,7 @@ export default function SearchPage() {
           )}
         </SearchResults>
       )}
+      </div>
       <Analytics.SearchView data={{searchTerm: term, searchResults: result}} />
     </div>
   );

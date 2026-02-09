@@ -13,8 +13,6 @@ import {
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import resetStyles from '~/styles/reset.css?url';
-import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
 
@@ -61,6 +59,19 @@ export function links() {
     {
       rel: 'preconnect',
       href: 'https://shop.app',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap',
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
@@ -146,13 +157,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
 
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <link rel="stylesheet" href={tailwindCss}></link>
-        <link rel="stylesheet" href={resetStyles}></link>
-        <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
       </head>
@@ -187,7 +196,7 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  let errorMessage = 'Unknown error';
+  let errorMessage = 'Error desconocido';
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
@@ -198,14 +207,18 @@ export function ErrorBoundary() {
   }
 
   return (
-    <div className="route-error">
-      <h1>Oops</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-3xl flex-col items-start justify-center gap-4 px-5 py-16 text-dark">
+      <p className="text-sm font-extrabold uppercase tracking-tight text-primary">
+        Error {errorStatus}
+      </p>
+      <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[0.95] tracking-tight">
+        Algo sali&oacute; mal
+      </h1>
+      {errorMessage ? (
+        <pre className="w-full overflow-auto rounded-lg border border-dark/10 bg-lightgray p-4 text-sm text-dark/80">
+          {errorMessage}
+        </pre>
+      ) : null}
     </div>
   );
 }

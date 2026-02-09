@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
 } from 'react';
+import {cn} from '~/lib/utils';
 
 type AsideType = 'search' | 'cart' | 'mobile' | 'closed';
 type AsideContextValue = {
@@ -39,6 +40,10 @@ export function Aside({
     const abortController = new AbortController();
 
     if (expanded) {
+      // Lock scrolling while an aside is open.
+      const prev = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = 'hidden';
+
       document.addEventListener(
         'keydown',
         function handler(event: KeyboardEvent) {
@@ -48,25 +53,51 @@ export function Aside({
         },
         {signal: abortController.signal},
       );
+
+      return () => {
+        document.documentElement.style.overflow = prev;
+        abortController.abort();
+      };
     }
+
     return () => abortController.abort();
   }, [close, expanded]);
 
   return (
     <div
       aria-modal
-      className={`overlay ${expanded ? 'expanded' : ''}`}
       role="dialog"
+      className={cn(
+        'fixed inset-0 z-50 transition-opacity duration-200',
+        expanded ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+      )}
     >
-      <button className="close-outside" onClick={close} />
-      <aside>
-        <header>
-          <h3>{heading}</h3>
-          <button className="close reset" onClick={close} aria-label="Close">
+      <button
+        className="absolute inset-0 cursor-default bg-black/25"
+        onClick={close}
+        aria-label="Cerrar"
+      />
+      <aside
+        className={cn(
+          'absolute right-0 top-0 h-full w-[min(420px,100vw)] border-l border-dark/10 bg-light text-dark shadow-2xl transition-transform duration-200',
+          expanded ? 'translate-x-0' : 'translate-x-full',
+        )}
+      >
+        <header className="flex h-16 items-center justify-between border-b border-dark/10 px-5">
+          <h3 className="text-sm font-extrabold uppercase tracking-tight">
+            {heading}
+          </h3>
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-dark/10 bg-light text-xl font-bold hover:bg-dark hover:text-light"
+            onClick={close}
+            aria-label="Cerrar"
+          >
             &times;
           </button>
         </header>
-        <main>{children}</main>
+        <main className="h-[calc(100%-4rem)] overflow-auto p-5">
+          {children}
+        </main>
       </aside>
     </div>
   );

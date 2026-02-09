@@ -23,7 +23,13 @@ export function PaginatedResourceSection<NodesType>({
         return (
           <div>
             <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+              {isLoading ? (
+                'Cargando...'
+              ) : (
+                <span className="text-sm font-extrabold uppercase tracking-tight text-primary">
+                  ↑ Cargar anteriores
+                </span>
+              )}
             </PreviousLink>
             {resourcesClassName ? (
               <div className={resourcesClassName}>{resourcesMarkup}</div>
@@ -31,7 +37,13 @@ export function PaginatedResourceSection<NodesType>({
               resourcesMarkup
             )}
             <NextLink>
-              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+              {isLoading ? (
+                'Cargando...'
+              ) : (
+                <span className="text-sm font-extrabold uppercase tracking-tight text-primary">
+                  Cargar m\u00e1s ↓
+                </span>
+              )}
             </NextLink>
           </div>
         );

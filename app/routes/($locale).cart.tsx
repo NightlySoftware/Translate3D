@@ -1,11 +1,11 @@
 import {useLoaderData, data, type HeadersFunction} from 'react-router';
-import type {Route} from './+types/cart';
+import type {Route} from './+types/($locale).cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Cart`}];
+  return [{title: 'Translate3D | Carrito'}];
 };
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
@@ -18,7 +18,7 @@ export async function action({request, context}: Route.ActionArgs) {
   const {action, inputs} = CartForm.getFormInput(formData);
 
   if (!action) {
-    throw new Error('No action provided');
+    throw new Error('Acci\u00f3n no proporcionada');
   }
 
   let status = 200;
@@ -105,9 +105,13 @@ export default function Cart() {
   const cart = useLoaderData<typeof loader>();
 
   return (
-    <div className="cart">
-      <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
-    </div>
+    <section className="mx-auto w-full max-w-6xl px-5 py-12 text-dark">
+      <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+        Carrito
+      </h1>
+      <div className="mt-8">
+        <CartMain layout="page" cart={cart} />
+      </div>
+    </section>
   );
 }

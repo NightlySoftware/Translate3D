@@ -42,22 +42,19 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   const cart = useOptimisticCart(originalCart);
 
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
-  const withDiscount =
-    cart &&
-    Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
-  const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
   const cartHasItems = cart?.totalQuantity ? cart.totalQuantity > 0 : false;
   const childrenMap = getLineItemChildrenMap(cart?.lines?.nodes ?? []);
 
   return (
-    <div className={className}>
+    <div className="flex flex-col gap-6">
       <CartEmpty hidden={linesCount} layout={layout} />
-      <div className="cart-details">
-        <p id="cart-lines" className="sr-only">
-          Line items
-        </p>
-        <div>
-          <ul aria-labelledby="cart-lines">
+      {linesCount ? (
+        <div className="flex flex-col gap-6">
+          <p id="cart-lines" className="sr-only">
+            Art&iacute;culos del carrito
+          </p>
+          <div>
+            <ul aria-labelledby="cart-lines" className="flex flex-col gap-4">
             {(cart?.lines?.nodes ?? []).map((line) => {
               // we do not render non-parent lines at the root of the cart
               if (
@@ -79,6 +76,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
         </div>
         {cartHasItems && <CartSummary cart={cart} layout={layout} />}
       </div>
+      ) : null}
     </div>
   );
 }
@@ -92,14 +90,17 @@ function CartEmpty({
   const {close} = useAside();
   return (
     <div hidden={hidden}>
-      <br />
-      <p>
-        Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-        started!
+      <p className="text-base font-semibold text-dark">
+        A&uacute;n no has agregado nada al carrito.
       </p>
-      <br />
+      <p className="mt-2 text-sm font-normal normal-case text-dark/70">
+        Explora la tienda y encuentra tu pr&oacute;ximo proyecto.
+      </p>
+      <div className="mt-6" />
       <Link to="/collections" onClick={close} prefetch="viewport">
-        Continue shopping →
+        <span className="text-sm font-extrabold uppercase tracking-tight text-primary hover:text-dark">
+          Seguir comprando →
+        </span>
       </Link>
     </div>
   );

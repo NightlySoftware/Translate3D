@@ -1,10 +1,10 @@
 import {useLoaderData} from 'react-router';
-import type {Route} from './+types/blogs.$blogHandle.$articleHandle';
+import type {Route} from './+types/($locale).blogs.$blogHandle.$articleHandle';
 import {Image} from '@shopify/hydrogen';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
+  return [{title: `Translate3D | ${data?.article.title ?? ''}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -69,26 +69,31 @@ export default function Article() {
   const {article} = useLoaderData<typeof loader>();
   const {title, image, contentHtml, author} = article;
 
-  const publishedDate = new Intl.DateTimeFormat('en-US', {
+  const publishedDate = new Intl.DateTimeFormat('es-MX', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   }).format(new Date(article.publishedAt));
 
   return (
-    <div className="article">
-      <h1>
+    <div className="mx-auto w-full max-w-3xl px-5 py-16">
+      <h1 className="text-[clamp(2.25rem,5vw,3.25rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
         {title}
-        <div>
-          <time dateTime={article.publishedAt}>{publishedDate}</time> &middot;{' '}
-          <address>{author?.name}</address>
-        </div>
       </h1>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-tight text-tgray">
+        <time dateTime={article.publishedAt}>{publishedDate}</time>
+        <span aria-hidden>&middot;</span>
+        <address className="not-italic">{author?.name}</address>
+      </div>
 
-      {image && <Image data={image} sizes="90vw" loading="eager" />}
+      {image && (
+        <div className="mt-8 overflow-hidden rounded-2xl border border-dark/10">
+          <Image data={image} sizes="90vw" loading="eager" />
+        </div>
+      )}
       <div
         dangerouslySetInnerHTML={{__html: contentHtml}}
-        className="article"
+        className="mt-10 flex flex-col gap-4 text-base font-normal normal-case leading-[1.6] text-dark/90"
       />
     </div>
   );

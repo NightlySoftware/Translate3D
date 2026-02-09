@@ -1,9 +1,9 @@
 import {useLoaderData} from 'react-router';
-import type {Route} from './+types/pages.$handle';
+import type {Route} from './+types/($locale).pages.$handle';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
+  return [{title: `Translate3D | ${data?.page.title ?? ''}`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -22,7 +22,7 @@ export async function loader(args: Route.LoaderArgs) {
  */
 async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   if (!params.handle) {
-    throw new Error('Missing page handle');
+    throw new Error('Falta el handle de la p\u00e1gina');
   }
 
   const [{page}] = await Promise.all([
@@ -35,7 +35,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   ]);
 
   if (!page) {
-    throw new Response('Not Found', {status: 404});
+    throw new Response('No encontrado', {status: 404});
   }
 
   redirectIfHandleIsLocalized(request, {handle: params.handle, data: page});
@@ -58,12 +58,15 @@ export default function Page() {
   const {page} = useLoaderData<typeof loader>();
 
   return (
-    <div className="page">
-      <header>
-        <h1>{page.title}</h1>
-      </header>
-      <main dangerouslySetInnerHTML={{__html: page.body}} />
-    </div>
+    <section className="mx-auto w-full max-w-4xl px-5 py-16 text-dark">
+      <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+        {page.title}
+      </h1>
+      <div
+        className="mt-8 text-base leading-relaxed text-dark/80 [&_a]:text-primary [&_a:hover]:text-dark [&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-4"
+        dangerouslySetInnerHTML={{__html: page.body}}
+      />
+    </section>
   );
 }
 

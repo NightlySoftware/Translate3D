@@ -4,7 +4,7 @@ import {
   useNavigation,
   useSearchParams,
 } from 'react-router';
-import type {Route} from './+types/account.orders._index';
+import type {Route} from './+types/($locale).account.orders._index';
 import {useRef} from 'react';
 import {
   Money,
@@ -30,7 +30,7 @@ type OrdersLoaderData = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Orders'}];
+  return [{title: 'Pedidos'}];
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
@@ -52,7 +52,7 @@ export async function loader({request, context}: Route.LoaderArgs) {
   });
 
   if (errors?.length || !data?.customer) {
-    throw Error('Customer orders not found');
+    throw Error('No se encontraron pedidos del cliente');
   }
 
   return {customer: data.customer, filters};
@@ -63,7 +63,7 @@ export default function Orders() {
   const {orders} = customer;
 
   return (
-    <div className="orders">
+    <div className="flex flex-col gap-8">
       <OrderSearchForm currentFilters={filters} />
       <OrdersTable orders={orders} filters={filters} />
     </div>
@@ -80,7 +80,7 @@ function OrdersTable({
   const hasFilters = !!(filters.name || filters.confirmationNumber);
 
   return (
-    <div className="acccount-orders" aria-live="polite">
+    <div className="account-orders" aria-live="polite">
       {orders?.nodes.length ? (
         <PaginatedResourceSection connection={orders}>
           {({node: order}) => <OrderItem key={order.id} order={order} />}
@@ -94,21 +94,35 @@ function OrdersTable({
 
 function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
   return (
-    <div>
+    <div className="rounded-2xl border border-dark/10 bg-light p-6">
       {hasFilters ? (
         <>
-          <p>No orders found matching your search.</p>
-          <br />
+          <p className="text-sm font-semibold text-dark">
+            No se encontraron pedidos con esos filtros.
+          </p>
+          <div className="mt-3" />
           <p>
-            <Link to="/account/orders">Clear filters →</Link>
+            <Link
+              to="/account/orders"
+              className="text-sm font-extrabold uppercase tracking-tight text-primary hover:text-dark"
+            >
+              Limpiar filtros →
+            </Link>
           </p>
         </>
       ) : (
         <>
-          <p>You haven&apos;t placed any orders yet.</p>
-          <br />
+          <p className="text-sm font-semibold text-dark">
+            A&uacute;n no has realizado ning&uacute;n pedido.
+          </p>
+          <div className="mt-3" />
           <p>
-            <Link to="/collections">Start Shopping →</Link>
+            <Link
+              to="/collections"
+              className="text-sm font-extrabold uppercase tracking-tight text-primary hover:text-dark"
+            >
+              Ir a la tienda →
+            </Link>
           </p>
         </>
       )}
@@ -152,34 +166,40 @@ function OrderSearchForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="order-search-form"
-      aria-label="Search orders"
+      className="rounded-2xl border border-dark/10 bg-light p-6"
+      aria-label="Buscar pedidos"
     >
-      <fieldset className="order-search-fieldset">
-        <legend className="order-search-legend">Filter Orders</legend>
+      <fieldset className="flex flex-col gap-4">
+        <legend className="text-xs font-extrabold uppercase tracking-tight text-tgray">
+          Filtrar pedidos
+        </legend>
 
-        <div className="order-search-inputs">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="search"
             name={ORDER_FILTER_FIELDS.NAME}
-            placeholder="Order #"
-            aria-label="Order number"
+            placeholder="Pedido #"
+            aria-label="N\u00famero de pedido"
             defaultValue={currentFilters.name || ''}
-            className="order-search-input"
+            className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
           <input
             type="search"
             name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
-            placeholder="Confirmation #"
-            aria-label="Confirmation number"
+            placeholder="Confirmaci\u00f3n #"
+            aria-label="N\u00famero de confirmaci\u00f3n"
             defaultValue={currentFilters.confirmationNumber || ''}
-            className="order-search-input"
+            className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
 
-        <div className="order-search-buttons">
-          <button type="submit" disabled={isSearching}>
-            {isSearching ? 'Searching' : 'Search'}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="submit"
+            disabled={isSearching}
+            className="rounded-lg border border-dark bg-dark px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary disabled:opacity-60"
+          >
+            {isSearching ? 'Buscando\u2026' : 'Buscar'}
           </button>
           {hasFilters && (
             <button
@@ -189,8 +209,9 @@ function OrderSearchForm({
                 setSearchParams(new URLSearchParams());
                 formRef.current?.reset();
               }}
+              className="rounded-lg border border-dark/20 bg-light px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-dark hover:border-dark hover:bg-lightgray disabled:opacity-60"
             >
-              Clear
+              Limpiar
             </button>
           )}
         </div>
@@ -201,22 +222,60 @@ function OrderSearchForm({
 
 function OrderItem({order}: {order: OrderItemFragment}) {
   const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
+  const processedDate = order.processedAt
+    ? new Date(order.processedAt).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : '';
+
   return (
     <>
-      <fieldset>
-        <Link to={`/account/orders/${btoa(order.id)}`}>
-          <strong>#{order.number}</strong>
-        </Link>
-        <p>{new Date(order.processedAt).toDateString()}</p>
+      <div className="mt-6 rounded-2xl border border-dark/10 bg-light p-5">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex flex-col">
+            <Link
+              to={`/account/orders/${btoa(order.id)}`}
+              className="text-sm font-extrabold uppercase tracking-tight text-dark hover:text-primary"
+            >
+              Pedido #{order.number}
+            </Link>
+            <p className="mt-1 text-sm font-normal normal-case text-dark/70">
+              {processedDate}
+            </p>
+          </div>
+          <div className="text-sm font-extrabold text-dark">
+            <Money data={order.totalPrice} />
+          </div>
+        </div>
+
         {order.confirmationNumber && (
-          <p>Confirmation: {order.confirmationNumber}</p>
+          <p className="mt-3 text-sm font-normal normal-case text-dark/70">
+            Confirmaci&oacute;n: {order.confirmationNumber}
+          </p>
         )}
-        <p>{order.financialStatus}</p>
-        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
-        <Money data={order.totalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
-      </fieldset>
-      <br />
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-dark/15 bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-tight text-dark">
+            {order.financialStatus}
+          </span>
+          {fulfillmentStatus ? (
+            <span className="rounded-full border border-dark/15 bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-tight text-dark">
+              {fulfillmentStatus}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="mt-4">
+          <Link
+            to={`/account/orders/${btoa(order.id)}`}
+            className="text-sm font-extrabold uppercase tracking-tight text-primary hover:text-dark"
+          >
+            Ver pedido →
+          </Link>
+        </div>
+      </div>
     </>
   );
 }
