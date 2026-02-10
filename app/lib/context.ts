@@ -35,6 +35,40 @@ export async function createHydrogenRouterContext(
     throw new Error('SESSION_SECRET environment variable is not set');
   }
 
+  // Hydrogen's runtime expects these env keys. Provide sane defaults where possible so local
+  // development doesn't require the full set up-front.
+  const safeEnv = {
+    ...env,
+    PUBLIC_CHECKOUT_DOMAIN: env.PUBLIC_CHECKOUT_DOMAIN ?? env.PUBLIC_STORE_DOMAIN,
+    PRIVATE_STOREFRONT_API_TOKEN:
+      env.PRIVATE_STOREFRONT_API_TOKEN ?? env.PUBLIC_STOREFRONT_API_TOKEN,
+    PUBLIC_CUSTOMER_ACCOUNT_API_URL:
+      env.PUBLIC_CUSTOMER_ACCOUNT_API_URL ??
+      (env.SHOP_ID ? `https://shopify.com/${env.SHOP_ID}` : ''),
+  } as Env;
+
+  const isPlaceholder = (value?: string) =>
+    !value ||
+    value.includes('REPLACE_ME') ||
+    value.includes('your-store.myshopify.com') ||
+    value.includes('tu-tienda.myshopify.com');
+
+  if (isPlaceholder(safeEnv.PUBLIC_STORE_DOMAIN)) {
+    throw new Error(
+      'PUBLIC_STORE_DOMAIN no est\u00e1 configurado (usa tu dominio real, ej: tu-tienda.myshopify.com)',
+    );
+  }
+  if (isPlaceholder(safeEnv.PUBLIC_CHECKOUT_DOMAIN)) {
+    throw new Error(
+      'PUBLIC_CHECKOUT_DOMAIN no est\u00e1 configurado (si no tienes uno, usa el mismo valor que PUBLIC_STORE_DOMAIN)',
+    );
+  }
+  if (isPlaceholder(safeEnv.PUBLIC_STOREFRONT_API_TOKEN)) {
+    throw new Error(
+      'PUBLIC_STOREFRONT_API_TOKEN no est\u00e1 configurado (token p\u00fablico Storefront API)',
+    );
+  }
+
   const waitUntil = executionContext.waitUntil.bind(executionContext);
   const [cache, session] = await Promise.all([
     caches.open('hydrogen'),
@@ -43,7 +77,7 @@ export async function createHydrogenRouterContext(
 
   const hydrogenContext = createHydrogenContext(
     {
-      env,
+      env: safeEnv,
       request,
       cache,
       waitUntil,

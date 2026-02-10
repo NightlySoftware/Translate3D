@@ -43,6 +43,18 @@ bun shopify hydrogen env pull
 
 El dev server usa `.env` (MiniOxygen). Debes tener variables tipo `PUBLIC_STORE_DOMAIN` y `PUBLIC_STOREFRONT_API_TOKEN`.
 
+### Variables requeridas (Hydrogen)
+
+- `SESSION_SECRET` (min 32 chars recomendado)
+- `PUBLIC_STORE_DOMAIN` (ej: `tu-tienda.myshopify.com`)
+- `PUBLIC_CHECKOUT_DOMAIN` (si no tienes dominio de checkout custom, usa el mismo que `PUBLIC_STORE_DOMAIN`)
+- `PUBLIC_STOREFRONT_API_TOKEN` (token público Storefront API)
+- `PRIVATE_STOREFRONT_API_TOKEN` (token privado Storefront API; temporalmente puede ser el mismo que el público)
+- `PUBLIC_STOREFRONT_ID` (Storefront ID, para analytics)
+- `SHOP_ID` (ID numérico de la tienda, para Customer Account API)
+- `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` (Customer Account API client id)
+- `PUBLIC_CUSTOMER_ACCOUNT_API_URL` (base URL `https://shopify.com/<SHOP_ID>`; Hydrogen no lo usa hoy, pero el tipo lo exige)
+
 ## Seed de datos (blog + colecciones + productos)
 
 Como no tienes data inicial en Shopify, incluimos un script para crear los datos del landing en tu tienda:
