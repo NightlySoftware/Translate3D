@@ -6,5 +6,6 @@ node_modules
 /.mf
 *.tsbuildinfo
 .env
+.env.*
 .shopify
 .react-router
