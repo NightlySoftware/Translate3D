@@ -164,44 +164,60 @@ async function main() {
   console.warn(`Seeding Shopify store: ${STORE_DOMAIN} (${ADMIN_API_VERSION})`);
 
   // Blog + articles (used by landing "Featured" section)
-  const blog = await createBlog('Blog');
-  console.warn(`Created blog: ${blog.handle} (${blog.id})`);
+  try {
+    const blog = await createBlog('Blog');
+    console.warn(`Created blog: ${blog.handle} (${blog.id})`);
 
-  const articles = [
-    {
-      title: 'La impresión 3D en la medicina',
-      bodyHtml:
-        '<p>La impresión 3D está transformando la medicina: prótesis personalizadas, modelos anatómicos para planificación quirúrgica y más.</p>',
-      image: 'enterprise.webp',
-    },
-    {
-      title: 'Cambios de filamento: mejores prácticas',
-      bodyHtml:
-        '<p>Cómo cambiar filamento sin atascos, evitando oozing, y manteniendo consistencia en color y temperatura.</p>',
-      image: 'design.webp',
-    },
-    {
-      title: 'Resinas: guía rápida de seguridad y curado',
-      bodyHtml:
-        '<p>Consejos para manejar resinas con seguridad, lavado, curado UV y almacenamiento.</p>',
-      image: 'tienda/resinas.webp',
-    },
-    {
-      title: 'Mantenimiento básico de tu impresora 3D',
-      bodyHtml:
-        '<p>Checklist semanal: limpieza, nivelación, lubricación de ejes y revisión de boquilla.</p>',
-      image: 'work.webp',
-    },
-  ];
+    const articles = [
+      {
+        title: 'La impresión 3D en la medicina',
+        bodyHtml:
+          '<p>La impresión 3D está transformando la medicina: prótesis personalizadas, modelos anatómicos para planificación quirúrgica y más.</p>',
+        image: 'enterprise.webp',
+      },
+      {
+        title: 'Cambios de filamento: mejores prácticas',
+        bodyHtml:
+          '<p>Cómo cambiar filamento sin atascos, evitando oozing, y manteniendo consistencia en color y temperatura.</p>',
+        image: 'design.webp',
+      },
+      {
+        title: 'Resinas: guía rápida de seguridad y curado',
+        bodyHtml:
+          '<p>Consejos para manejar resinas con seguridad, lavado, curado UV y almacenamiento.</p>',
+        image: 'tienda/resinas.webp',
+      },
+      {
+        title: 'Mantenimiento básico de tu impresora 3D',
+        bodyHtml:
+          '<p>Checklist semanal: limpieza, nivelación, lubricación de ejes y revisión de boquilla.</p>',
+        image: 'work.webp',
+      },
+    ];
 
-  for (const a of articles) {
-    const attachment = await readAttachment(a.image);
-    const created = await createArticle(blog.id, {
-      title: a.title,
-      bodyHtml: a.bodyHtml,
-      imageAttachment: attachment,
-    });
-    console.warn(`Created article: ${created.handle} (${created.id})`);
+    for (const a of articles) {
+      const attachment = await readAttachment(a.image);
+      const created = await createArticle(blog.id, {
+        title: a.title,
+        bodyHtml: a.bodyHtml,
+        imageAttachment: attachment,
+      });
+      console.warn(`Created article: ${created.handle} (${created.id})`);
+    }
+  } catch (error) {
+    // Common when the Admin token is missing merchant approval for write_content.
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(
+      [
+        'Skipping blog seed (Customer-facing "Featured" will be empty until fixed).',
+        'Reason:',
+        message.split('\n')[0],
+        '',
+        'Fix: In Shopify Admin -> Apps -> Develop apps -> Your app:',
+        '- Enable Admin API scopes: write_content (and write_products).',
+        '- Save, then (re)install the app to get merchant approval, and paste the new shpat token into SHOPIFY_ADMIN_API_ACCESS_TOKEN.',
+      ].join('\n'),
+    );
   }
 
   // Collections (used by landing "StoreCategories" section)
@@ -216,14 +232,21 @@ async function main() {
 
   const collectionIds = new Map<string, number>();
   for (const c of collectionsToCreate) {
-    const attachment = await readAttachment(c.image);
-    const created = await createCustomCollection({
-      title: c.title,
-      handle: c.handle,
-      imageAttachment: attachment,
-    });
-    collectionIds.set(c.handle, created.id);
-    console.warn(`Created collection: ${created.handle} (${created.id})`);
+    try {
+      const attachment = await readAttachment(c.image);
+      const created = await createCustomCollection({
+        title: c.title,
+        handle: c.handle,
+        imageAttachment: attachment,
+      });
+      collectionIds.set(c.handle, created.id);
+      console.warn(`Created collection: ${created.handle} (${created.id})`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `Skipping collection "${c.handle}" (insufficient Admin permissions?). ${message.split('\n')[0]}`,
+      );
+    }
   }
 
   // Products (ported from old mock data)
@@ -267,28 +290,35 @@ async function main() {
   ];
 
   for (const p of productsToCreate) {
-    const attachment = await readAttachment(p.image);
-    const created = await createProduct({
-      title: p.title,
-      bodyHtml: p.bodyHtml,
-      vendor: p.vendor,
-      productType: p.productType,
-      tags: p.tags,
-      price: p.price,
-      sku: p.sku,
-      imageAttachment: attachment,
-    });
+    try {
+      const attachment = await readAttachment(p.image);
+      const created = await createProduct({
+        title: p.title,
+        bodyHtml: p.bodyHtml,
+        vendor: p.vendor,
+        productType: p.productType,
+        tags: p.tags,
+        price: p.price,
+        sku: p.sku,
+        imageAttachment: attachment,
+      });
 
-    console.warn(`Created product: ${created.handle} (${created.id})`);
+      console.warn(`Created product: ${created.handle} (${created.id})`);
 
-    const collectionId = collectionIds.get(p.collection);
-    if (collectionId) {
-      await createCollect(created.id, collectionId);
-    }
+      const collectionId = collectionIds.get(p.collection);
+      if (collectionId) {
+        await createCollect(created.id, collectionId);
+      }
 
-    const bestSellersId = collectionIds.get('best-sellers');
-    if (bestSellersId) {
-      await createCollect(created.id, bestSellersId);
+      const bestSellersId = collectionIds.get('best-sellers');
+      if (bestSellersId) {
+        await createCollect(created.id, bestSellersId);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `Skipping product "${p.title}" (insufficient Admin permissions?). ${message.split('\n')[0]}`,
+      );
     }
   }
 
