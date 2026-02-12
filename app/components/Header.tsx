@@ -1,22 +1,21 @@
-import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from 'react-router';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
+import { Await, NavLink, useAsyncValue, useLocation } from 'react-router';
 import {
   type CartViewPayload,
   useAnalytics,
   useOptimisticCart,
 } from '@shopify/hydrogen';
-import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
-import {useAside} from '~/components/Aside';
-import {cn} from '~/lib/utils';
-import {LogoIcon} from '~/components/LogoIcon';
-import {Button} from '~/components/ui/button';
+import type { HeaderQuery, CartApiQueryFragment } from 'storefrontapi.generated';
+import { useAside } from '~/components/Aside';
+import { cn, focusStyle } from '~/lib/utils';
+import { LogoIcon } from '~/components/LogoIcon';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import {ChevronDown, Menu, Search, ShoppingCart, User} from 'lucide-react';
+import { ChevronDown, Menu, Search, ShoppingCart, User } from 'lucide-react';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -29,43 +28,398 @@ type Viewport = 'desktop' | 'mobile';
 
 type MenuItem = NonNullable<HeaderQuery['menu']>['items'][number];
 
+/* ───────────────────────── Nav Links (desktop) ───────────────────────── */
+
+function NavLinks({
+  isLight,
+  isScrolled,
+  items,
+  primaryDomainUrl,
+  publicStoreDomain,
+}: {
+  isLight: boolean;
+  isScrolled: boolean;
+  items: MenuItem[];
+  primaryDomainUrl: string;
+  publicStoreDomain: string;
+}) {
+  const { close } = useAside();
+
+  const normalizeUrl = (rawUrl: string) =>
+    rawUrl.includes('myshopify.com') ||
+      rawUrl.includes(publicStoreDomain) ||
+      rawUrl.includes(primaryDomainUrl)
+      ? new URL(rawUrl).pathname
+      : rawUrl;
+
+  const linkClass = isLight || isScrolled ? 'link-dark' : 'link-light';
+
+  return (
+    <nav className="hidden items-center justify-center gap-4 font-bold uppercase md:flex">
+      {items.map((item) => {
+        if (!item.url) return null;
+        const url = normalizeUrl(item.url);
+        const childItems = item.items ?? [];
+
+        if (childItems.length) {
+          return <HoverDropdown key={item.id} item={item} linkClass={linkClass} normalizeUrl={normalizeUrl} close={close} />;
+        }
+
+        return (
+          <NavLink
+            key={item.id}
+            to={url}
+            end
+            prefetch="intent"
+            className={({ isActive }) =>
+              cn(
+                'rounded py-0.5 text-sm',
+                isActive && 'text-primary',
+                focusStyle({ theme: isLight || isScrolled ? 'dark' : 'light' })
+              )
+            }
+          >
+            <span className={cn('flex items-center gap-2 px-1 py-0.5', linkClass)}>
+              {item.title}
+            </span>
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+}
+
+function HoverDropdown({
+  item,
+  linkClass,
+  normalizeUrl,
+  close
+}: {
+  item: MenuItem;
+  linkClass: string;
+  normalizeUrl: (url: string) => string;
+  close: () => void
+}) {
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const location = useLocation();
+
+  const isChildActive = (item.items ?? []).some(sub => {
+    if (!sub.url) return false;
+    const subUrl = normalizeUrl(sub.url);
+    return location.pathname === subUrl;
+  });
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 150);
+  };
+
+  return (
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative"
+    >
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className={cn(
+              'h-fit !overflow-visible border-none p-0 font-bold transition-colors hover:bg-transparent',
+              linkClass === 'link-light' ? 'text-brand-light' : 'text-brand-dark',
+              isChildActive && 'text-primary'
+            )}
+          >
+            <span className={cn('flex items-center gap-2 px-1 py-0.5 text-sm', linkClass)}>
+              {item.title} <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="min-w-[170px]"
+          align="start"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {(item.items ?? []).map((sub) => {
+            if (!sub.url) return null;
+            const subUrl = sub.url.includes('myshopify.com') ? new URL(sub.url).pathname : sub.url;
+            return (
+              <DropdownMenuItem
+                key={sub.id}
+                asChild
+              >
+                <NavLink
+                  to={subUrl}
+                  prefetch="intent"
+                  onClick={() => {
+                    close();
+                    setOpen(false);
+                  }}
+                  className={({ isActive }) =>
+                    cn(
+                      isActive && '!text-primary',
+                    )
+                  }
+                >
+                  {sub.title}
+                </NavLink>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+
+/* ────────────────────────── Search bar (inline) ─────────────────────── */
+
+function SearchBar() {
+  const [query, setQuery] = useState('');
+
+  return (
+    <form
+      action="/search"
+      method="get"
+      className="flex items-center gap-1"
+    >
+      <input
+        type="search"
+        name="q"
+        placeholder="Buscar"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className={cn(
+          'rounded-md border border-dark bg-white placeholder:text-dark/50 placeholder:font-bold placeholder:uppercase px-3 py-1.5 text-sm font-medium transition-all text-dark min-w-[200px]',
+          focusStyle({ theme: 'action' })
+        )}
+        style={{ fontFamily: 'inherit' }}
+      />
+      <Button
+        type="submit"
+        size="icon"
+        variant="primary"
+        aria-label="Buscar"
+      >
+        <Search className="h-4 w-4" />
+      </Button>
+    </form>
+  );
+}
+
+/* ──────────────────────── Cart + Account buttons ────────────────────── */
+
+function CartBadge({ count }: { count: number | null }) {
+  const { open } = useAside();
+  const { publish, shop, cart, prevCart } = useAnalytics();
+
+  return (
+    <Button
+      type="button"
+      variant="primary"
+      className='overflow-visible'
+      size="icon"
+      onClick={() => {
+        open('cart');
+        publish('cart_viewed', {
+          cart,
+          prevCart,
+          shop,
+          url: window.location.href || '',
+        } as CartViewPayload);
+      }}
+      aria-label="Carrito"
+    >
+      <ShoppingCart className="h-4 w-4" />
+      {count !== null && count > 0 ? (
+        <span className="absolute -right-2 -top-2 inline-flex size-4 items-center justify-center rounded-md bg-primary text-[10px] font-extrabold text-light">
+          {count}
+        </span>
+      ) : null}
+    </Button>
+  );
+}
+
+function CartToggle({ cart }: Pick<HeaderProps, 'cart'>) {
+  return (
+    <Suspense fallback={<CartBadge count={null} />}>
+      <Await resolve={cart}>
+        <CartBanner />
+      </Await>
+    </Suspense>
+  );
+}
+
+function CartBanner() {
+  const originalCart = useAsyncValue() as CartApiQueryFragment | null;
+  const cart = useOptimisticCart(originalCart);
+  return <CartBadge count={cart?.totalQuantity ?? 0} />;
+}
+
+import { Button } from '~/components/ui/button';
+
+function AccountButton({ isLoggedIn }: { isLoggedIn: Promise<boolean> }) {
+  return (
+    <Suspense fallback={<Button variant="action" className="w-fit px-8">Cuenta</Button>}>
+      <Await resolve={isLoggedIn} errorElement={<Button variant="action" className="w-fit px-8">Cuenta</Button>}>
+        {(loggedIn) => (
+          <Button
+            asChild
+            variant="action"
+            icon={<User className="h-4 w-4" />}
+          >
+            <NavLink
+              to="/account"
+              prefetch="intent"
+            >
+              {loggedIn ? 'Mi cuenta' : 'Iniciar sesión'}
+            </NavLink>
+          </Button>
+        )}
+      </Await>
+    </Suspense>
+  );
+}
+
+/* ────────────────────────── Mobile toggle ────────────────────────── */
+
+function HeaderMenuMobileToggle() {
+  const { open } = useAside();
+
+  return (
+    <Button
+      type="button"
+      variant="primary"
+      size="icon"
+      onClick={() => open('mobile')}
+      className="h-11 w-11 border-none md:hidden"
+      aria-label="Menú"
+    >
+      <Menu className="h-4 w-4" />
+    </Button>
+  );
+}
+
+/* ──────────────────────── Header CTA group ───────────────────────── */
+
+function HeaderCtas({
+  isLoggedIn,
+  cart,
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+  return (
+    <div className="flex items-center gap-3">
+      <HeaderMenuMobileToggle />
+      <SearchBar />
+      <CartToggle cart={cart} />
+      <span className="hidden md:inline-flex">
+        <AccountButton isLoggedIn={isLoggedIn} />
+      </span>
+    </div>
+  );
+}
+
+/* ═══════════════════════ MAIN HEADER ═══════════════════════════════ */
+
 export function Header({
   header,
   isLoggedIn,
   cart,
   publicStoreDomain,
 }: HeaderProps) {
-  const {shop, menu} = header;
+  const { shop, menu } = header;
+  const location = useLocation();
+  const isHomePage = location.pathname === '/' || location.pathname === '';
+
+  // On the homepage the navbar starts transparent; on other pages it's always "light" (white bg)
+  const isLight = !isHomePage;
+
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > 50);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Force use of our custom menu to ensure 1:1 fidelity with the old design
+  const items = FALLBACK_HEADER_MENU.items as MenuItem[];
+
+  // Text colour depends on whether the bg is light
+  const textColorClass = isLight || isScrolled ? 'text-dark' : 'text-light';
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-40 border-b border-dark/10 bg-light/80 px-5 py-4 backdrop-blur-md">
+    <header
+      className={cn(
+        'fixed left-0 right-0 top-0 z-40 px-5 transition-all duration-200',
+        textColorClass,
+      )}
+      style={{
+        backgroundColor:
+          isLight || isScrolled ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+        backdropFilter: isLight || isScrolled ? 'blur(10px)' : 'none',
+        padding: isScrolled ? '6px 20px' : '12px 20px',
+      }}
+    >
       <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-10 text-dark">
+        {/* Left: logo + nav links */}
+        <div className="flex items-center gap-10">
           <NavLink
             to="/"
             end
             prefetch="intent"
-            className="flex items-center gap-2 rounded-md"
+            className={cn(
+              "flex items-center gap-2 rounded-md",
+              focusStyle({ theme: isLight || isScrolled ? 'dark' : 'light' })
+            )}
           >
-            <LogoIcon className="h-12 w-12" />
-            <span className="text-xl font-bold normal-case tracking-tight">
-              {shop?.name || 'Translate3D'}
+            <LogoIcon
+              className={cn(
+                'transition-transform duration-200',
+                isScrolled ? 'h-9 w-9' : 'h-12 w-12',
+              )}
+            />
+            <span
+              className={cn(
+                'whitespace-nowrap font-bold normal-case transition-transform duration-200',
+                isScrolled ? 'text-xl' : 'text-2xl',
+              )}
+            >
+              Translate3D
             </span>
           </NavLink>
 
-          <HeaderMenu
-            menu={menu}
-            viewport="desktop"
+          <NavLinks
+            isLight={isLight}
+            isScrolled={isScrolled}
+            items={items}
             primaryDomainUrl={header.shop.primaryDomain.url}
             publicStoreDomain={publicStoreDomain}
           />
         </div>
 
-        <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+        {/* Right: search, cart, account */}
+        <HeaderCtas
+          isLoggedIn={isLoggedIn}
+          cart={cart}
+        />
       </div>
     </header>
   );
 }
+
+/* ──────────────── Mobile menu (used by Aside) ───────────────── */
 
 export function HeaderMenu({
   menu,
@@ -78,13 +432,13 @@ export function HeaderMenu({
   viewport: Viewport;
   publicStoreDomain: HeaderProps['publicStoreDomain'];
 }) {
-  const {close} = useAside();
+  const { close } = useAside();
 
-  const items = (menu?.items?.length ? menu.items : FALLBACK_HEADER_MENU.items) as MenuItem[];
+  const items = FALLBACK_HEADER_MENU.items as MenuItem[];
   const normalizeUrl = (rawUrl: string) =>
     rawUrl.includes('myshopify.com') ||
-    rawUrl.includes(publicStoreDomain) ||
-    rawUrl.includes(primaryDomainUrl)
+      rawUrl.includes(publicStoreDomain) ||
+      rawUrl.includes(primaryDomainUrl)
       ? new URL(rawUrl).pathname
       : rawUrl;
 
@@ -102,10 +456,11 @@ export function HeaderMenu({
                 to={url}
                 onClick={close}
                 prefetch="intent"
-                className={({isActive}) =>
+                className={({ isActive }) =>
                   cn(
                     'rounded-lg border border-dark/10 bg-light px-4 py-3 text-base font-extrabold uppercase tracking-tight text-dark',
                     isActive && 'border-primary text-primary',
+                    focusStyle({ theme: 'dark' })
                   )
                 }
               >
@@ -123,10 +478,11 @@ export function HeaderMenu({
                         to={subUrl}
                         onClick={close}
                         prefetch="intent"
-                        className={({isActive}) =>
+                        className={({ isActive }) =>
                           cn(
                             'rounded-lg px-4 py-2 text-sm font-extrabold uppercase tracking-tight text-dark/80 hover:bg-dark hover:text-light',
                             isActive && 'text-primary',
+                            focusStyle({ theme: 'dark' })
                           )
                         }
                       >
@@ -143,251 +499,86 @@ export function HeaderMenu({
     );
   }
 
-  return (
-    <nav className="hidden items-center justify-center gap-4 font-medium uppercase md:flex" role="navigation">
-      {items.map((item) => {
-        if (!item.url) return null;
-        const url = normalizeUrl(item.url);
-        const childItems = item.items ?? [];
-
-        if (childItems.length) {
-          return (
-            <DropdownMenu key={item.id}>
-              <DropdownMenuTrigger asChild>
-                <button className="link-dark flex items-center gap-2 rounded px-1 py-0.5 text-base uppercase transition-colors duration-300 hover:text-primary">
-                  {item.title} <ChevronDown className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {childItems.map((sub) => {
-                  if (!sub.url) return null;
-                  const subUrl = normalizeUrl(sub.url);
-                  return (
-                    <DropdownMenuItem key={sub.id} asChild>
-                      <NavLink to={subUrl} prefetch="intent" onClick={close}>
-                        {sub.title}
-                      </NavLink>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        }
-
-        return (
-          <NavLink
-            key={item.id}
-            to={url}
-            end
-            prefetch="intent"
-            className={({isActive}) =>
-              cn(
-                'link-dark rounded px-1 py-0.5 text-base uppercase transition-colors duration-300 hover:text-primary',
-                isActive && 'text-primary',
-              )
-            }
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
+  // Desktop fallback (used from Aside context — shouldn't normally render)
+  return null;
 }
 
-function HeaderCtas({
-  isLoggedIn,
-  cart,
-}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
-  const {open} = useAside();
-
-  return (
-    <nav className="flex items-center gap-2" role="navigation">
-      <HeaderMenuMobileToggle />
-
-      <NavLink
-        to="/account"
-        prefetch="intent"
-        className="md:hidden"
-        aria-label="Cuenta"
-      >
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light">
-          <User className="h-4 w-4" />
-        </span>
-      </NavLink>
-
-      <NavLink
-        to="/account"
-        prefetch="intent"
-        className={({isActive}) =>
-          cn(
-            'hidden items-center gap-2 rounded-lg border border-dark/10 bg-light px-3 py-2 text-sm font-extrabold uppercase tracking-tight text-dark hover:bg-dark hover:text-light md:inline-flex',
-            isActive && 'border-primary text-primary',
-          )
-        }
-      >
-        <User className="h-4 w-4" />
-        <Suspense fallback="Cuenta">
-          <Await resolve={isLoggedIn} errorElement="Cuenta">
-            {(loggedIn) => (loggedIn ? 'Mi cuenta' : 'Iniciar sesi\u00f3n')}
-          </Await>
-        </Suspense>
-      </NavLink>
-
-      <IconButton onClick={() => open('search')} label="Buscar">
-        <Search className="h-4 w-4" />
-      </IconButton>
-
-      <CartToggle cart={cart} />
-    </nav>
-  );
-}
-
-function HeaderMenuMobileToggle() {
-  const {open} = useAside();
-  return (
-    <IconButton onClick={() => open('mobile')} label="Men\u00fa" className="md:hidden">
-      <Menu className="h-4 w-4" />
-    </IconButton>
-  );
-}
-
-function IconButton({
-  label,
-  className,
-  ...props
-}: React.ComponentProps<'button'> & {label: string}) {
-  return (
-    <Button
-      type="button"
-      variant="secondary"
-      size="icon"
-      className={cn('rounded-lg', className)}
-      aria-label={label}
-      {...props}
-    />
-  );
-}
-
-function CartBadge({count}: {count: number | null}) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
-
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        open('cart');
-        publish('cart_viewed', {
-          cart,
-          prevCart,
-          shop,
-          url: window.location.href || '',
-        } as CartViewPayload);
-      }}
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light"
-      aria-label="Carrito"
-    >
-      <ShoppingCart className="h-4 w-4" />
-      {count !== null ? (
-        <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-light">
-          {count}
-        </span>
-      ) : null}
-    </button>
-  );
-}
-
-function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
-  return (
-    <Suspense fallback={<CartBadge count={null} />}>
-      <Await resolve={cart}>
-        <CartBanner />
-      </Await>
-    </Suspense>
-  );
-}
-
-function CartBanner() {
-  const originalCart = useAsyncValue() as CartApiQueryFragment | null;
-  const cart = useOptimisticCart(originalCart);
-  return <CartBadge count={cart?.totalQuantity ?? 0} />;
-}
+/* ──────────────── Fallback menu data ───────────────── */
 
 const FALLBACK_HEADER_MENU = {
   id: 'fallback-menu',
   items: [
     {
       id: 'tienda',
-      resourceId: null,
-      tags: [],
       title: 'Tienda',
       type: 'HTTP',
-      url: '/collections',
+      tags: [],
+      url: '/tienda',
       items: [
         {
           id: 'tienda-modelos',
-          resourceId: null,
-          tags: [],
           title: 'Modelos 3D',
           type: 'HTTP',
-          url: '/collections/modelos-3d',
+          tags: [],
+          url: '/tienda/modelos-3d',
           items: [],
         },
         {
           id: 'tienda-filamentos',
-          resourceId: null,
-          tags: [],
           title: 'Filamentos',
           type: 'HTTP',
-          url: '/collections/filamentos',
+          tags: [],
+          url: '/tienda/filamentos',
           items: [],
         },
         {
           id: 'tienda-resinas',
-          resourceId: null,
-          tags: [],
           title: 'Resinas',
           type: 'HTTP',
-          url: '/collections/resinas',
+          tags: [],
+          url: '/tienda/resinas',
           items: [],
         },
         {
           id: 'tienda-refacciones',
-          resourceId: null,
-          tags: [],
           title: 'Refacciones',
           type: 'HTTP',
-          url: '/collections/refacciones',
+          tags: [],
+          url: '/tienda/refacciones',
           items: [],
         },
       ],
     },
     {
       id: 'servicios',
-      resourceId: null,
-      tags: [],
       title: 'Servicios',
       type: 'HTTP',
-      url: '/servicios',
-      items: [],
-    },
-    {
-      id: 'blog',
-      resourceId: null,
       tags: [],
-      title: 'Blog',
-      type: 'HTTP',
-      url: '/blogs/blog',
-      items: [],
+      url: '/servicios',
+      items: [
+        {
+          id: 'servicios-modelado',
+          title: 'Modelado 3D',
+          type: 'HTTP',
+          tags: [],
+          url: '/servicios/modelado',
+          items: [],
+        },
+        {
+          id: 'servicios-impresion',
+          title: 'Impresion',
+          type: 'HTTP',
+          tags: [],
+          url: '/servicios/impresion',
+          items: [],
+        },
+      ],
     },
     {
       id: 'sobre-nosotros',
-      resourceId: null,
-      tags: [],
       title: 'Sobre nosotros',
       type: 'HTTP',
+      tags: [],
       url: '/sobre-nosotros',
       items: [],
     },

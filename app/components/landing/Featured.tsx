@@ -1,14 +1,16 @@
-import {ArrowRight} from 'lucide-react';
-import {Link} from 'react-router';
-import {Image} from '@shopify/hydrogen';
-import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from '~/components/ui/carousel';
-import {InfiniteText} from '~/components/landing/InfiniteText';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router';
+import { Image } from '@shopify/hydrogen';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '~/components/ui/carousel';
+import { InfiniteText } from '~/components/landing/InfiniteText';
+import { TagChip } from '~/components/landing/TagChip';
+import { cn, focusStyle } from '~/lib/utils';
 
 export type FeaturedArticle = {
   id: string;
   title: string;
   handle: string;
-  blog: {handle: string};
+  blog: { handle: string };
   image?: {
     id?: string | null;
     altText?: string | null;
@@ -18,16 +20,16 @@ export type FeaturedArticle = {
   } | null;
 };
 
-export function Featured({articles}: {articles: FeaturedArticle[]}) {
+export function Featured({ articles }: { articles: FeaturedArticle[] }) {
   return (
     <section className="flex w-full flex-col items-center justify-between gap-20 bg-light py-20 text-dark">
       <InfiniteText />
 
       <div className="w-full px-5">
-        <Carousel opts={{align: 'start', loop: true}}>
+        <Carousel opts={{ align: 'start', loop: true }}>
           <CarouselContent>
             {articles.map((article) => (
-              <CarouselItem key={article.id} className="basis-[85%] md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+              <CarouselItem key={article.id} className="basis-[85%] md:basis-[60%] lg:basis-[40%]">
                 <FeaturedCard article={article} />
               </CarouselItem>
             ))}
@@ -43,19 +45,24 @@ export function Featured({articles}: {articles: FeaturedArticle[]}) {
   );
 }
 
-function FeaturedCard({article}: {article: FeaturedArticle}) {
+function FeaturedCard({ article }: { article: FeaturedArticle }) {
   return (
     <Link
-      to={`/blogs/${article.blog.handle}/${article.handle}`}
-      className="group flex flex-col font-extrabold text-dark"
+      to={`/blog/${article.handle}`}
+      className={cn(
+        "group flex flex-col font-extrabold text-dark rounded-lg",
+        focusStyle({ theme: 'dark' })
+      )}
       prefetch="intent"
     >
-      <div className="flex items-end gap-2">
-        <p className="text-2xl leading-[1] tracking-tight">{article.title}</p>
+      <div className="flex items-start gap-2">
+        <p className="text-2xl h-[2.1em] leading-[1] tracking-tight line-clamp-2 uppercase">
+          {article.title}
+        </p>
         <ArrowRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-2" />
       </div>
 
-      <div className="relative mt-4 aspect-[6/5] w-full overflow-hidden rounded-lg border border-dark/10 bg-lightgray">
+      <div className="relative mt-4 aspect-[634/500] w-full overflow-hidden rounded-lg">
         {article.image ? (
           <Image
             data={article.image}
@@ -64,15 +71,13 @@ function FeaturedCard({article}: {article: FeaturedArticle}) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase text-tgray">
+          <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase text-tgray bg-lightgray">
             Sin imagen
           </div>
         )}
         <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute bottom-4 left-4 flex items-center gap-2">
-          <span className="rounded-full border border-dark/20 bg-light/80 px-3 py-1 text-xs font-extrabold uppercase">
-            Blog
-          </span>
+        <div className="absolute bottom-5 left-[18px] right-[18px] flex justify-start items-center gap-2.5">
+          <TagChip label="Blog" />
         </div>
       </div>
     </Link>

@@ -1,11 +1,12 @@
-import {ArrowRight} from 'lucide-react';
-import {Link} from 'react-router';
-import {Button} from '~/components/ui/button';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router';
+import { Button } from '~/components/ui/button';
+import { cn, focusStyle } from '~/lib/utils';
 
 export function CallToAction() {
   return (
-    <section className="flex w-full flex-col items-center justify-between gap-12 bg-light px-5 py-20 text-dark">
-      <p className="w-full text-[clamp(2rem,4vw,2.5rem)] font-extrabold leading-[0.95] tracking-tight">
+    <section className="flex flex-col min-h-fit w-full bg-light text-dark items-center justify-between gap-20 py-20 px-5">
+      <p className="w-full text-[40px] font-extrabold leading-[100%] tracking-tight uppercase">
         Juntos haremos
         <br />
         el modelo perfecto
@@ -13,9 +14,9 @@ export function CallToAction() {
         para ti
       </p>
 
-      <div className="flex w-full flex-col items-stretch justify-center gap-10 border-b border-dark pb-10 lg:flex-row lg:items-end">
-        <div className="flex w-full gap-4">
-          <p className="max-w-[520px] text-base font-normal normal-case leading-[1.2] text-dark/80">
+      <div className="flex flex-col w-full gap-10 border-b border-dark lg:flex-row items-stretch lg:items-end">
+        <div className="flex w-full gap-4 pb-4">
+          <p className="min-w-full lg:min-w-[500px] lg:w-1/2 text-[16px] font-normal normal-case leading-[120%]">
             En Translate3D nos apasiona la tecnolog&iacute;a y la impresi&oacute;n
             3D. Sabemos perfectamente lo importante que es contar con el equipo
             y material indicado para poder llevar tus ideas y proyectos a la
@@ -26,16 +27,19 @@ export function CallToAction() {
         <Link
           to="/cotizacion"
           prefetch="intent"
-          className="group/cta flex w-full items-start gap-4 border-dark lg:border-l lg:pl-4"
+          className={cn(
+            "group/cta flex w-full flex-col gap-4 pb-4 border-dark lg:border-l lg:pl-4 lg:flex-row rounded px-2 md:px-0",
+            focusStyle({ theme: 'action', focusType: 'inner' })
+          )}
         >
           <img
             src="/team.webp"
             alt="Translate3D"
-            className="w-[320px] shrink-0 rounded-lg object-cover lg:w-[450px]"
+            className="w-full lg:w-[450px] aspect-[2/1] object-cover shrink-0"
             loading="lazy"
           />
-          <div className="flex flex-col justify-between gap-4">
-            <p className="text-lg font-extrabold leading-[1.05] tracking-tight">
+          <div className="flex flex-col justify-between gap-2.5">
+            <p className="text-lg font-extrabold leading-[100%] tracking-tight uppercase">
               Cu&eacute;ntanos tus ideas y nosotros te ayudaremos a materializarlas.
             </p>
             <Button variant="action" className="w-fit">
@@ -47,4 +51,3 @@ export function CallToAction() {
     </section>
   );
 }
-

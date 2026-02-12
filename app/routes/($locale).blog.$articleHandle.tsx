@@ -1,10 +1,10 @@
-import {useLoaderData} from 'react-router';
-import type {Route} from './+types/($locale).blogs.$blogHandle.$articleHandle';
-import {Image} from '@shopify/hydrogen';
-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import { useLoaderData } from 'react-router';
+import type { Route } from './+types/($locale).blogs.$blogHandle.$articleHandle';
+import { Image } from '@shopify/hydrogen';
+import { redirectIfHandleIsLocalized } from '~/lib/redirect';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Translate3D | ${data?.article.title ?? ''}`}];
+export const meta: Route.MetaFunction = ({ data }) => {
+  return [{ title: `Translate3D | ${data?.article.title ?? ''}` }];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -14,29 +14,30 @@ export async function loader(args: Route.LoaderArgs) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return {...deferredData, ...criticalData};
+  return { ...deferredData, ...criticalData };
 }
 
 /**
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
-  const {blogHandle, articleHandle} = params;
+async function loadCriticalData({ context, request, params }: Route.LoaderArgs) {
+  const { articleHandle } = params;
+  const blogHandle = 'blog';
 
-  if (!articleHandle || !blogHandle) {
-    throw new Response('Not found', {status: 404});
+  if (!articleHandle) {
+    throw new Response('Not found', { status: 404 });
   }
 
-  const [{blog}] = await Promise.all([
+  const [{ blog }] = await Promise.all([
     context.storefront.query(ARTICLE_QUERY, {
-      variables: {blogHandle, articleHandle},
+      variables: { blogHandle, articleHandle },
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!blog?.articleByHandle) {
-    throw new Response(null, {status: 404});
+    throw new Response(null, { status: 404 });
   }
 
   redirectIfHandleIsLocalized(
@@ -53,7 +54,7 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
 
   const article = blog.articleByHandle;
 
-  return {article};
+  return { article };
 }
 
 /**
@@ -61,13 +62,13 @@ async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: Route.LoaderArgs) {
+function loadDeferredData({ context }: Route.LoaderArgs) {
   return {};
 }
 
 export default function Article() {
-  const {article} = useLoaderData<typeof loader>();
-  const {title, image, contentHtml, author} = article;
+  const { article } = useLoaderData<typeof loader>();
+  const { title, image, contentHtml, author } = article;
 
   const publishedDate = new Intl.DateTimeFormat('es-MX', {
     year: 'numeric',
@@ -92,7 +93,7 @@ export default function Article() {
         </div>
       )}
       <div
-        dangerouslySetInnerHTML={{__html: contentHtml}}
+        dangerouslySetInnerHTML={{ __html: contentHtml }}
         className="mt-10 flex flex-col gap-4 text-base font-normal normal-case leading-[1.6] text-dark/90"
       />
     </div>

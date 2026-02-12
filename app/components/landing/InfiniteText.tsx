@@ -1,6 +1,6 @@
-import type {CSSProperties} from 'react';
-import {useEffect, useRef, useState} from 'react';
-import {LogoIcon} from '~/components/LogoIcon';
+import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { LogoIcon } from '~/components/LogoIcon';
 
 export function InfiniteText() {
   const [width, setWidth] = useState(0);
@@ -20,11 +20,13 @@ export function InfiniteText() {
   }, []);
 
   const content = (
-    <div className="mx-8 flex items-center gap-4">
-      <LogoIcon className="h-24 w-24 text-dark" />
-      <p className="text-[clamp(3rem,7vw,6rem)] font-extrabold uppercase whitespace-nowrap tracking-tight text-dark">
+    <div className="mx-4 lg:mx-8 flex items-center gap-4">
+      <div className="flex size-24 lg:size-32 items-center justify-center rounded-md bg-light">
+        <LogoIcon className="text-dark" />
+      </div>
+      <h1 className="text-[64px] lg:text-[96px] font-extrabold uppercase whitespace-nowrap tracking-tight text-dark">
         &iquest;Qu&eacute; hacemos?
-      </p>
+      </h1>
     </div>
   );
 

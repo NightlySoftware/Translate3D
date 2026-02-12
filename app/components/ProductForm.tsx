@@ -1,13 +1,15 @@
-import {Link, useNavigate} from 'react-router';
-import {type MappedProductOptions} from '@shopify/hydrogen';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { type MappedProductOptions } from '@shopify/hydrogen';
 import type {
   Maybe,
   ProductOptionValueSwatch,
 } from '@shopify/hydrogen/storefront-api-types';
-import {AddToCartButton} from './AddToCartButton';
-import {useAside} from './Aside';
-import type {ProductFragment} from 'storefrontapi.generated';
-import {cn} from '~/lib/utils';
+import { AddToCartButton } from './AddToCartButton';
+import { useAside } from './Aside';
+import type { ProductFragment } from 'storefrontapi.generated';
+import { cn, focusStyle } from '~/lib/utils';
+import { Minus, Plus, X } from 'lucide-react';
 
 export function ProductForm({
   productOptions,
@@ -17,7 +19,12 @@ export function ProductForm({
   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
 }) {
   const navigate = useNavigate();
-  const {open} = useAside();
+  const { open } = useAside();
+  const [quantity, setQuantity] = useState(1);
+
+  const increment = () => setQuantity((q) => Math.min(q + 1, 100));
+  const decrement = () => setQuantity((q) => Math.max(q - 1, 1));
+
   return (
     <div className="flex flex-col gap-6">
       {productOptions.map((option) => {
@@ -44,40 +51,33 @@ export function ProductForm({
                 } = value;
 
                 if (isDifferentProduct) {
-                  // SEO
-                  // When the variant is a combined listing child product
-                  // that leads to a different url, we need to render it
-                  // as an anchor tag
                   return (
                     <Link
                       className={cn(
-                        'inline-flex items-center gap-2 rounded-full border border-dark/15 bg-light px-3 py-2 text-sm font-semibold text-dark transition-colors hover:border-primary',
+                        'inline-flex items-center gap-2 rounded-md border border-dark/15 bg-light px-3 py-2 text-sm font-semibold text-dark transition-colors hover:border-primary',
                         selected && 'border-primary bg-primary text-light',
                         !available && 'opacity-60',
+                        focusStyle({ theme: 'action' })
                       )}
                       key={option.name + name}
                       prefetch="intent"
                       preventScrollReset
                       replace
-                      to={`/products/${handle}?${variantUriQuery}`}
+                      to={`/tienda/p/${handle}?${variantUriQuery}`}
                       aria-current={selected ? 'true' : undefined}
                     >
                       <ProductOptionSwatch swatch={swatch} name={name} />
                     </Link>
                   );
                 } else {
-                  // SEO
-                  // When the variant is an update to the search param,
-                  // render it as a button with javascript navigating to
-                  // the variant so that SEO bots do not index these as
-                  // duplicated links
                   return (
                     <button
                       type="button"
                       className={cn(
-                        'inline-flex items-center gap-2 rounded-full border border-dark/15 bg-light px-3 py-2 text-sm font-semibold text-dark transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-50',
+                        'inline-flex items-center gap-2 rounded-md border border-dark/15 bg-light px-3 py-2 text-sm font-semibold text-dark transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-50',
                         selected && 'border-primary bg-primary text-light',
                         !available && 'opacity-60',
+                        focusStyle({ theme: 'action' })
                       )}
                       key={option.name + name}
                       disabled={!exists}
@@ -99,6 +99,61 @@ export function ProductForm({
           </div>
         );
       })}
+
+      {/* Legacy Quantity Selector */}
+      <div className="flex flex-col w-full border-t border-dark/10 pt-6">
+        <div className="flex items-center justify-between border-b border-dark/10 pb-4">
+          <div className="text-sm font-extrabold uppercase tracking-tight text-dark">
+            Cantidad y precio:
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center border border-dark/15 rounded-md bg-white overflow-hidden h-10 px-2 gap-1">
+              <button
+                type="button"
+                onClick={decrement}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                aria-label="Disminuir cantidad"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-8 text-center bg-transparent border-none focus:ring-0 font-bold text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button
+                type="button"
+                onClick={increment}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                aria-label="Aumentar cantidad"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            <X className="h-4 w-4 text-tgray" />
+            <div className="text-xl font-extrabold text-dark">
+              {selectedVariant?.price ? (
+                `$${parseFloat(selectedVariant.price.amount).toFixed(2)}`
+              ) : (
+                'Gratis'
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between py-4 text-2xl font-extrabold">
+          <p className="uppercase tracking-tight">Total</p>
+          <p className="text-primary tracking-tight">
+            {selectedVariant?.price ? (
+              `$${(parseFloat(selectedVariant.price.amount) * quantity).toFixed(2)}`
+            ) : (
+              'Gratis'
+            )}
+          </p>
+        </div>
+      </div>
+
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
@@ -107,12 +162,12 @@ export function ProductForm({
         lines={
           selectedVariant
             ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                },
-              ]
+              {
+                merchandiseId: selectedVariant.id,
+                quantity: quantity,
+                selectedVariant,
+              },
+            ]
             : []
         }
       >
@@ -140,8 +195,8 @@ function ProductOptionSwatch({
     <>
       <span
         aria-hidden
-        className="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border border-dark/15"
-        style={{backgroundColor: color || 'transparent'}}
+        className="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded-md border border-dark/15"
+        style={{ backgroundColor: color || 'transparent' }}
       >
         {image ? (
           <img src={image} alt="" className="h-full w-full object-cover" />

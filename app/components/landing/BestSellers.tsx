@@ -1,17 +1,19 @@
-import {useMemo, useState} from 'react';
-import {Link} from 'react-router';
-import {Image, Money} from '@shopify/hydrogen';
-import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
-import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from '~/components/ui/carousel';
-import {Button} from '~/components/ui/button';
-import {cn} from '~/lib/utils';
-import {TagChip} from '~/components/landing/TagChip';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
+import { Image, Money } from '@shopify/hydrogen';
+import type { MoneyV2 } from '@shopify/hydrogen/storefront-api-types';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '~/components/ui/carousel';
+import { Button } from '~/components/ui/button';
+import { cn, focusStyle } from '~/lib/utils';
+import { TagChip } from '~/components/landing/TagChip';
+import { ProductItem } from '~/components/ProductItem';
 
 export type BestSellerProduct = {
   id: string;
   title: string;
   handle: string;
   tags: string[];
+  totalInventory?: number;
   featuredImage?: {
     id?: string | null;
     url: string;
@@ -26,7 +28,7 @@ export type BestSellerProduct = {
 
 type FilterKey = 'descuento' | 'nuevo' | 'disponible' | null;
 
-export function BestSellers({products}: {products: BestSellerProduct[]}) {
+export function BestSellers({ products }: { products: BestSellerProduct[] }) {
   const [filter, setFilter] = useState<FilterKey>(null);
 
   const filtered = useMemo(() => {
@@ -35,19 +37,19 @@ export function BestSellers({products}: {products: BestSellerProduct[]}) {
       filter === 'nuevo'
         ? 'Nuevo'
         : filter === 'disponible'
-          ? 'Con inventario'
+          ? 'En stock'
           : 'Descuento';
     return products.filter((p) => p.tags?.includes(tag));
   }, [filter, products]);
 
   return (
-    <section className="flex w-full flex-col items-center justify-between gap-10 bg-light py-20 text-dark">
-      <div className="flex w-full flex-col gap-3 px-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <h2 className="text-[clamp(2.25rem,5vw,4rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
+    <section className="flex w-full flex-col min-h-fit bg-light text-dark items-center justify-between gap-20 py-20">
+      <div className="flex flex-col w-full gap-2.5 px-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8 flex-wrap">
+          <h2 className="text-[64px] font-extrabold uppercase leading-[100%] tracking-tight min-w-fit">
             Productos m&aacute;s vendidos
           </h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 min-w-fit lg:ml-0">
             <FilterButton
               active={filter === 'descuento'}
               onClick={() => setFilter((f) => (f === 'descuento' ? null : 'descuento'))}
@@ -61,20 +63,20 @@ export function BestSellers({products}: {products: BestSellerProduct[]}) {
               active={filter === 'disponible'}
               onClick={() => setFilter((f) => (f === 'disponible' ? null : 'disponible'))}
             >
-              Disponible
+              EN STOCK
             </FilterButton>
           </div>
         </div>
 
-        <div className="border-t border-dark">
-          <Carousel opts={{align: 'start', loop: false}} className="pt-6">
-            <CarouselContent>
+        {filtered.length > 0 ? (
+          <Carousel className="border-t border-dark" opts={{ align: 'start', loop: false }}>
+            <CarouselContent className="-ml-0">
               {filtered.map((product) => (
                 <CarouselItem
                   key={product.id}
-                  className="basis-[85%] pl-0 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                  className="basis-full pl-0 border-r border-dark last:border-r-0 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                 >
-                  <StoreItem product={product} />
+                  <ProductItem product={product as any} />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -83,7 +85,23 @@ export function BestSellers({products}: {products: BestSellerProduct[]}) {
               <CarouselNext />
             </div>
           </Carousel>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[545px] border-t border-dark gap-6 text-center w-full">
+            <h3 className="text-[32px] md:text-[48px] font-extrabold uppercase tracking-tight">
+              Sin resultados
+            </h3>
+            <p className="text-tgray max-w-md">
+              No se encontraron productos en la categoría de <span className="font-bold text-dark italic">"{filter}"</span> en este momento.
+            </p>
+            <Button
+              variant="action"
+              onClick={() => setFilter(null)}
+              className="mt-2"
+            >
+              Limpiar filtros
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -93,65 +111,15 @@ function FilterButton({
   active,
   className,
   ...props
-}: React.ComponentProps<typeof Button> & {active: boolean}) {
+}: React.ComponentProps<typeof Button> & { active: boolean }) {
   return (
     <Button
       type="button"
       variant={active ? 'action' : 'secondary'}
       size="sm"
-      className={cn(active ? '' : 'opacity-90', className)}
+      className={cn(className)}
       {...props}
     />
   );
 }
 
-function StoreItem({product}: {product: BestSellerProduct}) {
-  return (
-    <div className="group relative overflow-hidden rounded-lg border border-dark/10 bg-light">
-      <Link
-        to={`/products/${product.handle}`}
-        prefetch="intent"
-        className="flex flex-col gap-8 p-4"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <h3 className="line-clamp-2 min-h-[2.5rem] text-base font-extrabold uppercase leading-tight tracking-tight">
-            {product.title}
-          </h3>
-          <p className="text-right text-sm font-semibold text-tgray">
-            <Money data={product.priceRange.minVariantPrice} />
-          </p>
-        </div>
-
-        <div className="relative mx-auto aspect-square w-2/3">
-          {product.featuredImage ? (
-            <Image
-              data={product.featuredImage}
-              alt={product.featuredImage.altText || product.title}
-              aspectRatio="1/1"
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(min-width: 1024px) 300px, 60vw"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-lg border border-dark/10 bg-lightgray text-xs font-semibold uppercase text-tgray">
-              Sin imagen
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {(product.tags ?? []).slice(0, 3).map((tag) => (
-            <TagChip key={tag} label={tag} />
-          ))}
-        </div>
-      </Link>
-
-      <div className="absolute inset-x-0 bottom-0 translate-y-full p-4 transition-transform duration-300 group-hover:translate-y-0">
-        <Button asChild variant="action" className="w-full">
-          <Link to={`/products/${product.handle}`} prefetch="intent">
-            Ver art&iacute;culo
-          </Link>
-        </Button>
-      </div>
-    </div>
-  );
-}

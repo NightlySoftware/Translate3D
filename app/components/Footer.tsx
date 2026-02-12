@@ -1,13 +1,16 @@
-import {Suspense} from 'react';
-import {Await, Link} from 'react-router';
-import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
-import {Button} from '~/components/ui/button';
-import {SectionSeparator} from '~/components/SectionSeparator';
-import {ArrowDown, Facebook, Instagram, Youtube} from 'lucide-react';
-import {cn} from '~/lib/utils';
+import { Suspense } from 'react';
+import { Await, Link } from 'react-router';
+import type { FooterQuery, HeaderQuery } from 'storefrontapi.generated';
+import { Button } from '~/components/ui/button';
+import { SectionSeparator } from '~/components/SectionSeparator';
+import { ArrowDown, Facebook, Instagram, Youtube } from 'lucide-react';
+import { cn, focusStyle } from '~/lib/utils';
+
+import { useIsMobile } from '~/hooks/use-mobile';
 
 interface FooterProps {
   footer: Promise<FooterQuery | null>;
+  footerArticles: Promise<any[]>;
   header: HeaderQuery;
   publicStoreDomain: string;
 }
@@ -16,6 +19,7 @@ type FooterMenuItem = NonNullable<FooterQuery['menu']>['items'][number];
 
 export function Footer({
   footer: footerPromise,
+  footerArticles,
   header,
   publicStoreDomain,
 }: FooterProps) {
@@ -23,12 +27,16 @@ export function Footer({
     <Suspense fallback={<div className="h-32 bg-dark" />}>
       <Await resolve={footerPromise}>
         {(footer) => (
-          <footer className="mt-10 bg-dark text-light">
+          <footer className="flex flex-col min-h-fit w-full bg-dark text-light items-center justify-between">
             <SectionSeparator color="dark" />
+
             <FooterHero />
+
             <FooterTracker />
+
             <FooterLinks
               menu={footer?.menu ?? null}
+              footerArticles={footerArticles}
               primaryDomainUrl={header.shop.primaryDomain.url}
               publicStoreDomain={publicStoreDomain}
             />
@@ -40,72 +48,59 @@ export function Footer({
 }
 
 function FooterHero() {
+  const isMobile = useIsMobile();
   return (
-    <div className="flex w-full flex-col items-start justify-between gap-8 px-5 py-10 lg:flex-row lg:items-center lg:px-20">
-      <p className="text-[clamp(3rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-tight">
+    <div className={cn("flex w-full items-center gap-4 px-5 py-10 lg:px-20", isMobile ? "justify-center" : "justify-between")}>
+      <p className="text-[64px] lg:text-[96px] text-center font-extrabold leading-[100%] tracking-tight uppercase">
         De tu cabeza
         <br />a tu mesa
       </p>
-      <img
-        src="/work.webp"
-        alt="Trabajo en Translate3D"
-        className="w-full max-w-[520px] rounded-lg object-cover"
-        loading="lazy"
-      />
+      {isMobile ? null : (
+        <img
+          src="/work.webp"
+          alt="Translate3D"
+          className="w-[450px] aspect-[2/1] h-auto object-cover"
+          loading="lazy"
+        />
+      )}
     </div>
   );
 }
 
 function FooterTracker() {
   return (
-    <div className="px-5 pb-10">
-      {/* Order tracker (dummy for now) */}
-      <div className="flex w-full flex-col gap-8 rounded-2xl bg-primary p-5">
-        <div className="flex items-start justify-between gap-8">
-          <p className="text-[10px] font-normal leading-[1.05] tracking-wide">
-            <span className="mr-10 inline-block">RASTREADOR</span>
-            <span className="mr-10 inline-block">
+    <div className="flex w-full justify-between items-center gap-4 px-4 pb-10">
+      <div className="flex flex-col w-full font-extrabold bg-primary rounded p-5 gap-20">
+        <div className="flex justify-between">
+          <p className="flex text-[10px] leading-[100%] font-normal gap-20 lg:gap-80">
+            <span>RASTREADOR</span>
+            <span>
               &iquest;YA
               <br /> HAS COMPRADO
               <br /> CON NOSOTROS?
             </span>
-            <span className="inline-block">
+            <span className="hidden md:block">
               BUSCA
               <br /> R&Aacute;PIDAMENTE EL
               <br /> ESTATUS DE TU PEDIDO
             </span>
-            <span className="ml-4 inline-block rounded-full bg-light/15 px-2 py-1 text-[10px] font-extrabold uppercase">
-              Pr&oacute;ximamente
-            </span>
           </p>
-          <ArrowDown className="h-4 w-4 text-light" />
+          <ArrowDown className="w-4 h-4 text-white" />
         </div>
 
-        <form
-          className="flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            // TODO: wire to real tracking provider/service.
-          }}
-        >
-          <div className="flex w-full items-end justify-between gap-4">
+        <div className="flex flex-col">
+          <div className="flex w-full justify-between items-end gap-4">
             <input
-              disabled
               type="text"
-              placeholder="N&uacute;mero de pedido"
-              className="w-full bg-transparent text-[clamp(1.75rem,5vw,4rem)] uppercase tracking-tight text-light placeholder:text-light/60 focus:outline-none disabled:opacity-70"
+              placeholder="Numero de pedido"
+              className="placeholder:text-white/60 placeholder:focus:text-white/40 text-[clamp(2.5rem,5vw,64px)] bg-transparent focus:outline-none uppercase tracking-tight w-full lg:w-[calc(100%-200px)]"
             />
-            <Button
-              disabled
-              type="submit"
-              variant="secondary"
-              className="h-auto bg-light/10 px-6 py-4 text-[clamp(1.25rem,3vw,2.25rem)] text-light hover:bg-light/15 hover:text-light"
-            >
+            <button className="hidden lg:block text-center text-white text-[64px] uppercase tracking-tight">
               Buscar
-            </Button>
+            </button>
           </div>
-          <div className="h-3 w-full rounded bg-light" />
-        </form>
+          <div className="w-full h-4 bg-white rounded -mt-2" />
+        </div>
       </div>
     </div>
   );
@@ -113,10 +108,12 @@ function FooterTracker() {
 
 function FooterLinks({
   menu,
+  footerArticles,
   primaryDomainUrl,
   publicStoreDomain,
 }: {
   menu: FooterQuery['menu'] | null;
+  footerArticles: Promise<any[]>;
   primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
   publicStoreDomain: string;
 }) {
@@ -124,8 +121,8 @@ function FooterLinks({
 
   const normalizeUrl = (rawUrl: string) =>
     rawUrl.includes('myshopify.com') ||
-    rawUrl.includes(publicStoreDomain) ||
-    rawUrl.includes(primaryDomainUrl)
+      rawUrl.includes(publicStoreDomain) ||
+      rawUrl.includes(primaryDomainUrl)
       ? new URL(rawUrl).pathname
       : rawUrl;
 
@@ -136,108 +133,128 @@ function FooterLinks({
   }));
 
   return (
-    <div className="px-5 pb-10 lg:px-10">
-      <div className="grid grid-cols-1 gap-8 border-b border-light/20 py-10 md:grid-cols-2 lg:grid-cols-4">
-        {columns.map((col) => (
-          <div key={col.title} className="flex flex-col gap-3">
-            <p className="text-lg font-extrabold uppercase tracking-tight">
-              {col.title}
-            </p>
+    <div className="flex flex-col w-full px-5 py-10 lg:px-20 lg:py-20">
+      {/* Top Section - 4 Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 border-b border-light">
+        {/* Column 1: Big Bold Links */}
+        <div className="flex flex-col gap-2 p-5 border-b lg:border-b-0 lg:border-r border-light">
+          {columns[0]?.children.map((child) => (
+            <Link
+              key={child.id}
+              to={normalizeUrl(child.url!)}
+              className={cn(
+                "text-2xl font-extrabold uppercase tracking-tight hover:text-light/60 transition-colors leading-tight rounded",
+                focusStyle({ theme: 'light' })
+              )}
+            >
+              {child.title}
+            </Link>
+          ))}
+        </div>
 
-            {col.children.length ? (
-              <div className="flex flex-col gap-2">
-                {col.children.map((child) => {
-                  if (!child.url) return null;
-                  const url = normalizeUrl(child.url);
-                  const isExternal = !url.startsWith('/');
-                  return isExternal ? (
-                    <a
-                      key={child.id}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link-light w-fit text-sm font-normal normal-case text-light/80 hover:text-light"
-                    >
-                      {child.title}
-                    </a>
-                  ) : (
+        {/* Column 2: Blog (Dynamic Articles) */}
+        <div className="flex flex-col gap-6 p-5 border-b lg:border-b-0 lg:border-r border-light">
+          <p className="text-xl font-extrabold uppercase tracking-tight">Blog</p>
+          <div className="flex flex-col gap-2">
+            <Suspense fallback={<p className="text-xs font-thin animate-pulse">Cargando...</p>}>
+              <Await resolve={footerArticles}>
+                {(articles) => (
+                  articles.map((article: any) => (
                     <Link
-                      key={child.id}
-                      to={url}
-                      prefetch="intent"
-                      className="link-light w-fit text-sm font-normal normal-case text-light/80 hover:text-light"
+                      key={article.id}
+                      to={`/blog/${article.handle}`}
+                      className={cn(
+                        "w-fit link-light font-thin text-sm leading-tight hover:text-light/60 transition-colors rounded",
+                        focusStyle({ theme: 'light' })
+                      )}
                     >
-                      {child.title}
+                      {article.title}
                     </Link>
-                  );
-                })}
-              </div>
-            ) : col.url ? (
-              <Link
-                to={col.url}
-                prefetch="intent"
-                className="link-light w-fit text-sm font-normal normal-case text-light/80 hover:text-light"
-              >
-                Ver
-              </Link>
-            ) : null}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-6 py-10 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col gap-3">
-          <p className="text-lg font-extrabold uppercase tracking-tight">
-            Nuestras redes oficiales
-          </p>
-          <div className="flex items-center gap-3 text-light">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-light"
-              aria-label="Facebook"
-            >
-              <Facebook className="h-6 w-6" />
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-light"
-              aria-label="Instagram"
-            >
-              <Instagram className="h-6 w-6" />
-            </a>
-            <a
-              href="https://youtube.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-light"
-              aria-label="YouTube"
-            >
-              <Youtube className="h-6 w-6" />
-            </a>
+                  ))
+                )}
+              </Await>
+            </Suspense>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <p className="text-lg font-extrabold uppercase tracking-tight">
-            Descubre nuestros productos
-          </p>
-          <Button asChild variant="secondary" className="w-fit">
-            <Link to="/collections" prefetch="intent">
-              Ver tienda
+        {/* Column 3: Nosotros
+        <div className="flex flex-col gap-6 p-5 border-b lg:border-b-0 lg:border-r border-light">
+          <p className="text-xl font-extrabold uppercase tracking-tight">Nosotros</p>
+          <div className="flex flex-col gap-2">
+            {columns[2]?.children.map((child) => (
+              <Link
+                key={child.id}
+                to={normalizeUrl(child.url!)}
+                className="w-fit link-light font-thin text-sm leading-tight"
+              >
+                {child.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+        */}
+
+        {/* Column 4: Soporte
+        <div className="flex flex-col gap-6 p-5 pb-10 lg:pb-5">
+          <p className="text-xl font-extrabold uppercase tracking-tight">Soporte</p>
+          <div className="flex flex-col gap-2">
+            {columns[3]?.children.map((child) => (
+              <Link
+                key={child.id}
+                to={normalizeUrl(child.url!)}
+                className="w-fit link-light font-thin text-sm leading-tight"
+              >
+                {child.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+        */}
+      </div>
+
+      {/* Bottom Section - Aligned with Top Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4">
+        {/* Socials - Column 1 */}
+        <div className="flex flex-col justify-between p-5 gap-8 border-b lg:border-b-0 lg:border-r border-light min-h-[180px]">
+          <p className="text-xl font-extrabold uppercase tracking-tight">Nuestras redes oficiales</p>
+          <div className="flex gap-4">
+            <Link to="/" className={cn("hover:text-light/60 transition-opacity rounded", focusStyle({ theme: 'light' }))}>
+              <Facebook className="w-6 h-6" />
             </Link>
+            <Link to="/" className={cn("hover:text-light/60 transition-opacity rounded", focusStyle({ theme: 'light' }))}>
+              <Instagram className="w-6 h-6" />
+            </Link>
+            <Link to="/" className={cn("hover:text-light/60 transition-opacity rounded", focusStyle({ theme: 'light' }))}>
+              <Youtube className="w-6 h-6" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Empty area - Column 2 */}
+        <div className="hidden lg:block border-r border-light min-h-[180px]" />
+
+        {/* Store Link - Column 3 */}
+        <div className="flex flex-col justify-between p-5 gap-8 border-b lg:border-b-0 lg:border-r border-light min-h-[180px]">
+          <p className="text-xl font-extrabold uppercase tracking-tight">Descubre nuestros productos</p>
+          <Button
+            variant="darkSecondary"
+            asChild
+            className="w-fit border-light text-light hover:text-dark uppercase font-extrabold px-6"
+          >
+            <Link to="/tienda">Ver tienda</Link>
           </Button>
         </div>
 
-        <div className="text-sm font-normal normal-case text-light/70">
+        {/* Attribution - Column 4 */}
+        <div className="flex items-end p-5 min-h-[180px]">
           <a
-            href="https://nightly.software"
+            href="https://nightlysoftware.com"
             target="_blank"
             rel="noopener noreferrer"
-            className={cn('link-light')}
+            className={cn(
+              "text-xs font-thin link-light opacity-60 hover:opacity-100 transition-opacity rounded",
+              focusStyle({ theme: 'light' })
+            )}
           >
             Website by Nightly Software
           </a>
@@ -251,151 +268,47 @@ const FALLBACK_FOOTER_MENU = {
   id: 'fallback-footer-menu',
   items: [
     {
-      id: 'footer-tienda',
-      resourceId: null,
-      tags: [],
-      title: 'Tienda',
-      type: 'HTTP',
-      url: '/collections',
+      id: 'footer-profesional',
+      title: 'SECTOR PROFESIONAL',
+      url: '/',
       items: [
-        {
-          id: 'footer-modelos',
-          resourceId: null,
-          tags: [],
-          title: 'Modelos 3D',
-          type: 'HTTP',
-          url: '/collections/modelos-3d',
-          items: [],
-        },
-        {
-          id: 'footer-filamentos',
-          resourceId: null,
-          tags: [],
-          title: 'Filamentos',
-          type: 'HTTP',
-          url: '/collections/filamentos',
-          items: [],
-        },
-        {
-          id: 'footer-resinas',
-          resourceId: null,
-          tags: [],
-          title: 'Resinas',
-          type: 'HTTP',
-          url: '/collections/resinas',
-          items: [],
-        },
-        {
-          id: 'footer-refacciones',
-          resourceId: null,
-          tags: [],
-          title: 'Refacciones',
-          type: 'HTTP',
-          url: '/collections/refacciones',
-          items: [],
-        },
+        { id: 'f-1', title: 'SECTOR PROFESIONAL', url: '/' },
+        { id: 'f-2', title: 'KITS DE ROB\u00D3TICA', url: '/' },
+        { id: 'f-3', title: 'SERVICIOS', url: '/' },
       ],
     },
     {
       id: 'footer-blog',
-      resourceId: null,
-      tags: [],
-      title: 'Blog',
-      type: 'HTTP',
-      url: '/blogs/blog',
+      title: 'BLOG',
+      url: '/blog',
       items: [
-        {
-          id: 'footer-blog-1',
-          resourceId: null,
-          tags: [],
-          title: 'La impresi\u00f3n 3D en la medicina',
-          type: 'HTTP',
-          url: '/blogs/blog',
-          items: [],
-        },
-        {
-          id: 'footer-blog-2',
-          resourceId: null,
-          tags: [],
-          title: 'Cambios de filamento',
-          type: 'HTTP',
-          url: '/blogs/blog',
-          items: [],
-        },
-        {
-          id: 'footer-blog-3',
-          resourceId: null,
-          tags: [],
-          title: 'Mantenimiento',
-          type: 'HTTP',
-          url: '/blogs/blog',
-          items: [],
-        },
+        { id: 'b-1', title: 'La impresi\u00f3n 3D en la medicina', url: '/blog' },
+        { id: 'b-2', title: 'Cambios de filamento', url: '/blog' },
+        { id: 'b-3', title: 'Reviews', url: '/blog' },
+        { id: 'b-4', title: 'Resinas', url: '/blog' },
+        { id: 'b-5', title: 'Mantenimiento', url: '/blog' },
+        { id: 'b-6', title: 'Todos los articulos', url: '/blog' },
       ],
     },
     {
       id: 'footer-nosotros',
-      resourceId: null,
-      tags: [],
-      title: 'Nosotros',
-      type: 'HTTP',
+      title: 'NOSOTROS',
       url: '/sobre-nosotros',
       items: [
-        {
-          id: 'footer-nosotros-1',
-          resourceId: null,
-          tags: [],
-          title: 'Nuestra historia',
-          type: 'HTTP',
-          url: '/sobre-nosotros',
-          items: [],
-        },
-        {
-          id: 'footer-nosotros-2',
-          resourceId: null,
-          tags: [],
-          title: 'Nuestro compromiso',
-          type: 'HTTP',
-          url: '/sobre-nosotros',
-          items: [],
-        },
+        { id: 'n-1', title: 'Nuestra historia', url: '/sobre-nosotros' },
+        { id: 'n-2', title: 'Nuestro compromiso', url: '/sobre-nosotros' },
+        { id: 'n-3', title: 'Equipo', url: '/sobre-nosotros' },
       ],
     },
     {
       id: 'footer-soporte',
-      resourceId: null,
-      tags: [],
-      title: 'Soporte',
-      type: 'HTTP',
+      title: 'SOPORTE',
       url: '/soporte',
       items: [
-        {
-          id: 'footer-soporte-1',
-          resourceId: null,
-          tags: [],
-          title: 'Opciones de contacto',
-          type: 'HTTP',
-          url: '/soporte',
-          items: [],
-        },
-        {
-          id: 'footer-soporte-2',
-          resourceId: null,
-          tags: [],
-          title: 'Proceso de env\u00edos',
-          type: 'HTTP',
-          url: '/soporte',
-          items: [],
-        },
-        {
-          id: 'footer-soporte-3',
-          resourceId: null,
-          tags: [],
-          title: 'Devoluciones',
-          type: 'HTTP',
-          url: '/soporte',
-          items: [],
-        },
+        { id: 's-1', title: 'Opciones de contacto', url: '/soporte' },
+        { id: 's-2', title: 'Proceso de env\u00edos', url: '/soporte' },
+        { id: 's-3', title: 'Devoluciones', url: '/soporte' },
+        { id: 's-4', title: 'Preguntas frecuentes', url: '/soporte' },
       ],
     },
   ],

@@ -1,47 +1,75 @@
-import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import type {CartLayout} from '~/components/CartMain';
-import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
-import {useEffect, useRef} from 'react';
-import {useFetcher} from 'react-router';
+import type { CartApiQueryFragment } from 'storefrontapi.generated';
+import type { CartLayout } from '~/components/CartMain';
+import { CartForm, Money, type OptimisticCart } from '@shopify/hydrogen';
+import { useEffect, useRef, useState } from 'react';
+import { cn, focusStyle } from '~/lib/utils';
+import { useFetcher } from 'react-router';
 
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: CartLayout;
 };
 
-export function CartSummary({cart, layout}: CartSummaryProps) {
-  const className = layout === 'page' ? 'mt-10' : 'mt-6';
+export function CartSummary({ cart, layout }: CartSummaryProps) {
+  const className = layout === 'page' ? 'mt-10' : 'mt-8 border-t border-dark pt-8';
+  const totalQuantity = cart?.totalQuantity || 0;
 
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <h4 className="text-base font-extrabold uppercase tracking-tight">
-        Totales
+      <h4 className="text-[32px] font-extrabold uppercase tracking-tighter leading-none mb-6">
+        Resumen de compra
       </h4>
-      <dl className="mt-3 flex items-center justify-between rounded-lg border border-dark/10 bg-light p-4">
-        <dt className="text-sm font-semibold text-dark">Subtotal</dt>
-        <dd className="text-sm font-extrabold text-dark">
-          {cart?.cost?.subtotalAmount?.amount ? (
-            <Money data={cart?.cost?.subtotalAmount} />
-          ) : (
-            '-'
-          )}
-        </dd>
-      </dl>
-      <CartDiscounts discountCodes={cart?.discountCodes} />
-      <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
-      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+
+      <div className="flex flex-col gap-4">
+        <dl className="flex items-center justify-between">
+          <dt className="text-xs font-extrabold uppercase tracking-tight text-dark">
+            Art&iacute;culos ({totalQuantity})
+          </dt>
+          <dd className="text-base font-extrabold text-dark tracking-tight">
+            {cart?.cost?.subtotalAmount?.amount ? (
+              <Money data={cart?.cost?.subtotalAmount} />
+            ) : (
+              '-'
+            )}
+          </dd>
+        </dl>
+
+        <CartDiscounts discountCodes={cart?.discountCodes} />
+        <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
+
+        <div className="border-t border-dark/10 pt-4 mt-2">
+          <dl className="flex items-center justify-between">
+            <dt className="text-[20px] font-extrabold uppercase tracking-tighter text-dark">
+              Total
+            </dt>
+            <dd className="text-[24px] font-extrabold text-dark tracking-tighter">
+              {cart?.cost?.totalAmount?.amount ? (
+                <Money data={cart?.cost?.totalAmount} />
+              ) : (
+                '-'
+              )}
+            </dd>
+          </dl>
+        </div>
+
+        <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+
+        <p className="mt-4 text-[10px] text-tgray text-center font-medium leading-tight px-4">
+          El costo del env&iacute;o y tu m&eacute;todo de pago ser&aacute;n procesados al continuar
+        </p>
+      </div>
     </div>
   );
 }
 
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+function CartCheckoutActions({ checkoutUrl }: { checkoutUrl?: string }) {
   if (!checkoutUrl) return null;
 
   return (
-    <div className="mt-6">
-      <a href={checkoutUrl} target="_self">
-        <p className="rounded-lg border border-primary bg-primary px-4 py-3 text-center text-sm font-extrabold uppercase tracking-tight text-light hover:border-dark hover:bg-dark">
-          Continuar al checkout &rarr;
+    <div className="mt-2">
+      <a href={checkoutUrl} target="_self" className={cn("block rounded", focusStyle({ theme: 'action' }))}>
+        <p className="rounded-none bg-primary px-4 py-4 text-center text-[15px] font-extrabold uppercase tracking-tight text-light hover:bg-dark transition-colors">
+          Continuar compra
         </p>
       </a>
     </div>
@@ -56,27 +84,68 @@ function CartDiscounts({
   const codes: string[] =
     discountCodes
       ?.filter((discount) => discount.applicable)
-      ?.map(({code}) => code) || [];
+      ?.map(({ code }) => code) || [];
+
+  const fetcher = useFetcher({ key: 'discount-code-update' });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // We use a ref to track the last code submitted
+  const lastSubmittedCode = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (fetcher.state === 'submitting') {
+      const formData = fetcher.formData;
+      const code = formData?.get('discountCode');
+      if (typeof code === 'string' && code.trim()) {
+        lastSubmittedCode.current = code;
+        setFeedback(null); // Clear previous feedback while loading
+      }
+    }
+
+    if (fetcher.state === 'idle' && fetcher.data) {
+      if (lastSubmittedCode.current) {
+        const appliedCode = discountCodes?.find(
+          (d) => d.code.toUpperCase() === lastSubmittedCode.current?.toUpperCase()
+        );
+
+        if (appliedCode) {
+          if (appliedCode.applicable) {
+            setFeedback({ type: 'success', message: '¡Cupón aplicado!' });
+            if (inputRef.current) inputRef.current.value = '';
+          } else {
+            setFeedback({ type: 'error', message: 'Código inválido o no aplicable' });
+          }
+        } else {
+          // If the code isn't in the list at all, it might have been rejected entirely
+          setFeedback({ type: 'error', message: 'Código inválido o no aplicable' });
+        }
+        lastSubmittedCode.current = null;
+      }
+    }
+  }, [fetcher.state, fetcher.data, discountCodes]);
+
+  const isSubmitting = fetcher.state === 'submitting';
 
   return (
-    <div className="mt-6">
+    <div className="mt-2 text-left">
       {/* Have existing discount, display it with a remove option */}
-      <dl hidden={!codes.length}>
+      <dl aria-hidden={codes.length === 0} className={cn("mb-4", codes.length === 0 && "hidden")}>
         <div className="flex flex-col gap-2">
-          <dt className="text-xs font-extrabold uppercase tracking-tight text-tgray">
-            Descuento(s)
+          <dt className="text-[10px] font-extrabold uppercase tracking-tight text-tgray">
+            Cup&oacute;n aplicado:
           </dt>
-          <UpdateDiscountForm>
-            <div className="flex items-center justify-between rounded-lg border border-dark/10 bg-light p-4">
-              <code className="text-xs font-extrabold uppercase tracking-tight text-dark">
+          <UpdateDiscountForm fetcherKey="discount-code-update">
+            <div className="flex items-center justify-between py-1">
+              <code className="text-[13px] font-extrabold uppercase tracking-tight text-primary">
                 {codes?.join(', ')}
               </code>
               <button
                 type="submit"
                 aria-label="Quitar descuento"
-                className="text-xs font-extrabold uppercase tracking-tight text-primary hover:text-dark"
+                className="text-[10px] font-extrabold uppercase tracking-tight text-primary hover:text-dark transition-colors"
               >
-                Quitar
+                Eliminar
               </button>
             </div>
           </UpdateDiscountForm>
@@ -84,25 +153,50 @@ function CartDiscounts({
       </dl>
 
       {/* Show an input to apply a discount */}
-      <UpdateDiscountForm discountCodes={codes}>
-        <div className="flex items-center gap-2">
-          <label htmlFor="discount-code-input" className="sr-only">
-            C\u00f3digo de descuento
+      <UpdateDiscountForm discountCodes={codes} fetcherKey="discount-code-update">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="discount-code-input" className="text-[10px] font-extrabold uppercase tracking-tight text-dark">
+            C&oacute;digo de cup&oacute;n:
           </label>
-          <input
-            id="discount-code-input"
-            type="text"
-            name="discountCode"
-            placeholder="C\u00f3digo de descuento"
-            className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-          <button
-            type="submit"
-            aria-label="Aplicar descuento"
-            className="rounded-lg border border-dark bg-dark px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary"
-          >
-            Aplicar
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              id="discount-code-input"
+              type="text"
+              name="discountCode"
+              ref={inputRef}
+              disabled={isSubmitting}
+              className={cn(
+                "w-full bg-white border rounded px-4 py-2 text-sm font-bold text-dark placeholder:text-dark/20 focus:border-dark outline-none transition-all h-10",
+                feedback?.type === 'error' ? "border-red-500" : "border-dark/20",
+                focusStyle({ theme: 'action' })
+              )}
+            />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              aria-label="Aplicar descuento"
+              className="bg-primary px-6 py-2 h-10 text-[11px] font-extrabold uppercase tracking-tight text-light hover:bg-dark transition-all shrink-0 rounded disabled:opacity-50"
+            >
+              {isSubmitting ? '...' : 'Aplicar'}
+            </button>
+          </div>
+
+          <div className="min-h-[15px] mt-1 relative">
+            {isSubmitting && (
+              <p className="text-[10px] font-bold uppercase text-tgray animate-pulse">
+                Aplicando cup&oacute;n...
+              </p>
+            )}
+
+            {!isSubmitting && feedback && (
+              <p className={cn(
+                "text-[10px] font-bold uppercase",
+                feedback.type === 'success' ? "text-green-600" : "text-red-500"
+              )}>
+                {feedback.message}
+              </p>
+            )}
+          </div>
         </div>
       </UpdateDiscountForm>
     </div>
@@ -111,15 +205,18 @@ function CartDiscounts({
 
 function UpdateDiscountForm({
   discountCodes,
+  fetcherKey,
   children,
 }: {
   discountCodes?: string[];
+  fetcherKey?: string;
   children: React.ReactNode;
 }) {
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.DiscountCodesUpdate}
+      fetcherKey={fetcherKey}
       inputs={{
         discountCodes: discountCodes || [],
       }}
@@ -135,11 +232,11 @@ function CartGiftCard({
   giftCardCodes: CartApiQueryFragment['appliedGiftCards'] | undefined;
 }) {
   const giftCardCodeInput = useRef<HTMLInputElement>(null);
-  const giftCardAddFetcher = useFetcher({key: 'gift-card-add'});
+  const giftCardAddFetcher = useFetcher({ key: 'gift-card-add' });
 
   useEffect(() => {
     if (giftCardAddFetcher.data) {
-      giftCardCodeInput.current!.value = '';
+      if (giftCardCodeInput.current) giftCardCodeInput.current.value = '';
     }
   }, [giftCardAddFetcher.data]);
 
@@ -161,7 +258,10 @@ function CartGiftCard({
                 </div>
                 <button
                   type="submit"
-                  className="text-xs font-extrabold uppercase tracking-tight text-primary hover:text-dark"
+                  className={cn(
+                    "text-xs font-extrabold uppercase tracking-tight text-primary hover:text-dark transition-colors rounded",
+                    focusStyle({ theme: 'action' })
+                  )}
                 >
                   Quitar
                 </button>
@@ -171,24 +271,9 @@ function CartGiftCard({
         </dl>
       )}
 
-      <AddGiftCardForm fetcherKey="gift-card-add">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            name="giftCardCode"
-            placeholder="C\u00f3digo de gift card"
-            ref={giftCardCodeInput}
-            className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-          <button
-            type="submit"
-            disabled={giftCardAddFetcher.state !== 'idle'}
-            className="rounded-lg border border-dark bg-dark px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary disabled:opacity-50"
-          >
-            Aplicar
-          </button>
-        </div>
-      </AddGiftCardForm>
+      {/* Remove gift card input to avoid duplication with coupon, 
+          as Shopify gift cards and coupons are often handled similarly by users 
+          in this context, and user explicitly requested to remove '2 coupon items' */}
     </div>
   );
 }

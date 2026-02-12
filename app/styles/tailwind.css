@@ -32,7 +32,7 @@
   --border: color-mix(in srgb, var(--brand-dark) 18%, transparent);
   --input: color-mix(in srgb, var(--brand-dark) 18%, transparent);
   --ring: color-mix(in srgb, var(--brand-primary) 65%, transparent);
-  --radius: 0.75rem;
+  --radius: 4px;
 }
 
 .dark {
@@ -79,19 +79,26 @@
   --color-tgray: var(--brand-gray);
   --color-lightgray: var(--brand-lightgray);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --font-anton: "Anton", sans-serif;
+  --font-manrope: "Manrope", sans-serif;
+
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
     @apply bg-background text-foreground;
   }
+
   body {
     font-family:
       "Manrope",
@@ -115,7 +122,9 @@
 .link-dark,
 .link-action {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding-bottom: 2px;
 }
 
@@ -130,7 +139,7 @@
   left: 0;
   transform: scaleX(0);
   transform-origin: bottom right;
-  transition: transform 0.25s ease-out;
+  transition: transform 0.2s ease-out;
 }
 
 .link-light:hover::after,
@@ -176,6 +185,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }

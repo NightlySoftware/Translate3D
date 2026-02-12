@@ -1,10 +1,11 @@
-import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
-import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
-import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
-import {useVariantUrl} from '~/lib/variants';
-import {Link} from 'react-router';
-import {ProductPrice} from './ProductPrice';
-import {useAside} from './Aside';
+import type { CartLineUpdateInput } from '@shopify/hydrogen/storefront-api-types';
+import type { CartLayout, LineItemChildrenMap } from '~/components/CartMain';
+import { CartForm, Image, type OptimisticCartLine } from '@shopify/hydrogen';
+import { useVariantUrl } from '~/lib/variants';
+import { Link } from 'react-router';
+import { ProductPrice } from './ProductPrice';
+import { useAside } from './Aside';
+import { cn, focusStyle } from '~/lib/utils';
 import type {
   CartApiQueryFragment,
   CartLineFragment,
@@ -27,62 +28,66 @@ export function CartLineItem({
   line: CartLine;
   childrenMap: LineItemChildrenMap;
 }) {
-  const {id, merchandise} = line;
-  const {product, title, image, selectedOptions} = merchandise;
+  const { id, merchandise, cost } = line;
+  const { product, title, image, selectedOptions } = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
-  const {close} = useAside();
+  const { close } = useAside();
   const lineItemChildren = childrenMap[id];
   const childrenLabelId = `cart-line-children-${id}`;
 
   return (
-    <li key={id} className="rounded-lg border border-dark/10 bg-light p-3">
+    <li key={id} className="border-b border-dark/10 py-6 last:border-0">
       <div className="flex items-start gap-4">
         {image && (
           <Image
             alt={title}
             aspectRatio="1/1"
             data={image}
-            height={100}
+            height={80}
             loading="lazy"
-            width={100}
-            className="rounded-lg border border-dark/10"
+            width={80}
+            className="rounded-none object-contain mix-blend-multiply"
           />
         )}
 
-        <div className="flex-1">
-          <Link
-            prefetch="intent"
-            to={lineItemUrl}
-            onClick={() => {
-              if (layout === 'aside') {
-                close();
-              }
-            }}
-          >
-            <p className="text-sm font-extrabold uppercase tracking-tight text-dark hover:text-primary">
-              {product.title}
-            </p>
-          </Link>
-          <div className="mt-1 text-sm font-semibold text-dark">
-            <ProductPrice price={line?.cost?.totalAmount} />
+        <div className="flex-1 flex flex-col gap-2">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex flex-col">
+              <Link
+                prefetch="intent"
+                to={lineItemUrl}
+                onClick={() => {
+                  if (layout === 'aside') {
+                    close();
+                  }
+                }}
+                className={cn("rounded", focusStyle({ theme: 'action' }))}
+              >
+                <p className="text-[13px] font-extrabold uppercase tracking-tight text-dark leading-tight">
+                  {product.title}
+                </p>
+              </Link>
+              <p className="text-[10px] font-bold uppercase text-tgray tracking-tight mt-0.5">
+                {selectedOptions
+                  .filter((opt) => opt.value !== 'Default Title')
+                  .map((opt) => opt.value)
+                  .join(' / ')}
+              </p>
+            </div>
+
+            <div className="flex flex-col items-end shrink-0">
+              <CartLineQuantity line={line} />
+              <div className="mt-2 text-[15px] font-extrabold text-dark tracking-tight">
+                <ProductPrice price={line?.cost?.totalAmount} />
+              </div>
+            </div>
           </div>
-          <ul className="mt-2 flex flex-col gap-1">
-            {selectedOptions.map((option) => (
-              <li key={option.name}>
-                <small className="text-xs font-semibold uppercase tracking-tight text-tgray">
-                  {option.name}: {option.value}
-                </small>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-3">
-            <CartLineQuantity line={line} />
-          </div>
+
         </div>
       </div>
 
       {lineItemChildren ? (
-        <div className="mt-3 border-t border-dark/10 pt-3">
+        <div className="mt-3 border-t border-dark/10 pt-3 pl-10">
           <p id={childrenLabelId} className="sr-only">
             Line items with {product.title}
           </p>
@@ -107,40 +112,53 @@ export function CartLineItem({
  * These controls are disabled when the line item is new, and the server
  * hasn't yet responded that it was successfully added to the cart.
  */
-function CartLineQuantity({line}: {line: CartLine}) {
+function CartLineQuantity({ line }: { line: CartLine }) {
   if (!line || typeof line?.quantity === 'undefined') return null;
-  const {id: lineId, quantity, isOptimistic} = line;
+  const { id: lineId, quantity, isOptimistic } = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
 
   return (
-    <div className="flex items-center gap-3">
-      <small className="text-xs font-extrabold uppercase tracking-tight text-tgray">
-        Cantidad: {quantity}
-      </small>
-      <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
-        <button
-          aria-label="Disminuir cantidad"
-          disabled={quantity <= 1 || !!isOptimistic}
-          name="decrease-quantity"
-          value={prevQuantity}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light disabled:opacity-40"
-        >
-          <span>&#8722; </span>
-        </button>
-      </CartLineUpdateButton>
-      <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
+    <div className="flex items-center bg-gray-100 rounded overflow-hidden h-7 border border-dark/5">
+      {quantity > 1 ? (
+        <CartLineUpdateButton lines={[{ id: lineId, quantity: prevQuantity }]}>
+          <button
+            aria-label="Disminuir cantidad"
+            disabled={!!isOptimistic}
+            name="decrease-quantity"
+            value={prevQuantity}
+            className="flex h-full w-7 items-center justify-center bg-[#D9D9D9] text-dark hover:bg-dark hover:text-light disabled:opacity-50 transition-colors text-xs font-bold"
+          >
+            <span>&#8722; </span>
+          </button>
+        </CartLineUpdateButton>
+      ) : (
+        <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic}>
+          <button
+            aria-label="Quitar del carrito"
+            disabled={!!isOptimistic}
+            className="flex h-full w-7 items-center justify-center bg-[#D9D9D9] text-dark hover:bg-dark hover:text-light disabled:opacity-50 transition-colors text-xs font-bold"
+          >
+            <span>&#8722; </span>
+          </button>
+        </CartLineRemoveButton>
+      )}
+
+      <div className="px-2 text-[11px] font-extrabold text-dark min-w-[20px] text-center">
+        {quantity}
+      </div>
+
+      <CartLineUpdateButton lines={[{ id: lineId, quantity: nextQuantity }]}>
         <button
           aria-label="Aumentar cantidad"
           name="increase-quantity"
           value={nextQuantity}
           disabled={!!isOptimistic}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-dark/10 bg-light text-dark hover:bg-dark hover:text-light disabled:opacity-40"
+          className="flex h-full w-7 items-center justify-center bg-primary text-light hover:bg-dark transition-colors text-xs font-bold"
         >
           <span>&#43;</span>
         </button>
       </CartLineUpdateButton>
-      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} />
     </div>
   );
 }
@@ -153,24 +171,20 @@ function CartLineQuantity({line}: {line: CartLine}) {
 function CartLineRemoveButton({
   lineIds,
   disabled,
+  children,
 }: {
   lineIds: string[];
   disabled: boolean;
+  children?: React.ReactNode;
 }) {
   return (
     <CartForm
       fetcherKey={getUpdateKey(lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
-      inputs={{lineIds}}
+      inputs={{ lineIds }}
     >
-      <button
-        disabled={disabled}
-        type="submit"
-        className="ml-auto inline-flex h-9 items-center justify-center rounded-lg border border-dark/10 bg-light px-3 text-xs font-extrabold uppercase tracking-tight text-dark hover:bg-dark hover:text-light disabled:opacity-40"
-      >
-        Quitar
-      </button>
+      {children}
     </CartForm>
   );
 }
@@ -189,7 +203,7 @@ function CartLineUpdateButton({
       fetcherKey={getUpdateKey(lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
-      inputs={{lines}}
+      inputs={{ lines }}
     >
       {children}
     </CartForm>

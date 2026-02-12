@@ -1,31 +1,31 @@
-import {Await, useLoaderData} from 'react-router';
-import type {Route} from './+types/($locale)._index';
-import {Suspense} from 'react';
-import type {BestSellerProduct} from '~/components/landing/BestSellers';
-import type {StoreCategory} from '~/components/landing/StoreCategories';
-import type {FeaturedArticle} from '~/components/landing/Featured';
-import {Hero} from '~/components/landing/Hero';
-import {Featured} from '~/components/landing/Featured';
-import {RotatingCube} from '~/components/landing/RotatingCube';
-import {StoreCategories} from '~/components/landing/StoreCategories';
-import {BestSellers} from '~/components/landing/BestSellers';
-import {ActionLinks} from '~/components/landing/ActionLinks';
-import {CallToAction} from '~/components/landing/CallToAction';
-import {SectionSeparator} from '~/components/SectionSeparator';
+import { Await, useLoaderData } from 'react-router';
+import type { Route } from './+types/($locale)._index';
+import { Suspense } from 'react';
+import type { BestSellerProduct } from '~/components/landing/BestSellers';
+import type { StoreCategory } from '~/components/landing/StoreCategories';
+import type { FeaturedArticle } from '~/components/landing/Featured';
+import { Hero } from '~/components/landing/Hero';
+import { Featured } from '~/components/landing/Featured';
+import { RotatingCube } from '~/components/landing/RotatingCube';
+import { StoreCategories } from '~/components/landing/StoreCategories';
+import { BestSellers } from '~/components/landing/BestSellers';
+import { ActionLinks } from '~/components/landing/ActionLinks';
+import { CallToAction } from '~/components/landing/CallToAction';
+import { SectionSeparator } from '~/components/SectionSeparator';
 
 export const meta: Route.MetaFunction = () => {
   return [
-    {title: 'Translate3D | Inicio'},
-    {name: 'description', content: 'Impresi\u00f3n 3D, filamentos, resinas y refacciones.'},
+    { title: 'Translate3D | Inicio' },
+    { name: 'description', content: 'Impresi\u00f3n 3D, filamentos, resinas y refacciones.' },
   ];
 };
 
 export async function loader(args: Route.LoaderArgs) {
   const deferredData = loadDeferredData(args);
-  return {...deferredData};
+  return { ...deferredData };
 }
 
-function loadDeferredData({context}: Route.LoaderArgs) {
+function loadDeferredData({ context }: Route.LoaderArgs) {
   const featuredArticles = context.storefront
     .query(HOME_FEATURED_ARTICLES_QUERY, {
       variables: {
@@ -41,7 +41,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
     });
 
   const categories = context.storefront
-    .query(HOME_CATEGORIES_QUERY, {cache: context.storefront.CacheLong()})
+    .query(HOME_CATEGORIES_QUERY, { cache: context.storefront.CacheLong() })
     .then((res) => {
       const nodes = [
         res.modelos3d,
@@ -66,7 +66,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
           if (!c) return null;
           return {
             title: c.title,
-            to: `/collections/${c.handle}`,
+            to: `/tienda/${c.handle}`,
             imageSrc: c.image?.url ?? fallbackImages[c.handle] ?? '/work.webp',
             rounded:
               handle === 'modelos-3d'
@@ -87,7 +87,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
   const bestSellers = context.storefront
     .query(HOME_BEST_SELLERS_QUERY, {
-      variables: {first: 12},
+      variables: { first: 12 },
       cache: context.storefront.CacheShort(),
     })
     .then((res) => res.products.nodes as unknown as BestSellerProduct[])
@@ -96,7 +96,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
       return [] as BestSellerProduct[];
     });
 
-  return {featuredArticles, categories, bestSellers};
+  return { featuredArticles, categories, bestSellers };
 }
 
 export default function Homepage() {

@@ -1,6 +1,6 @@
-import {Link} from 'react-router';
-import {Image, Money, Pagination} from '@shopify/hydrogen';
-import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
+import { Link } from 'react-router';
+import { Image, Money, Pagination } from '@shopify/hydrogen';
+import { urlWithTrackingParams, type RegularSearchReturn } from '~/lib/search';
 
 type SearchItems = RegularSearchReturn['result']['items'];
 type PartialSearchResult<ItemType extends keyof SearchItems> = Pick<
@@ -10,7 +10,7 @@ type PartialSearchResult<ItemType extends keyof SearchItems> = Pick<
   Pick<RegularSearchReturn, 'term'>;
 
 type SearchResultsProps = RegularSearchReturn & {
-  children: (args: SearchItems & {term: string}) => React.ReactNode;
+  children: (args: SearchItems & { term: string }) => React.ReactNode;
 };
 
 export function SearchResults({
@@ -22,7 +22,7 @@ export function SearchResults({
     return null;
   }
 
-  return children({...result.items, term});
+  return children({ ...result.items, term });
 }
 
 SearchResults.Articles = SearchResultsArticles;
@@ -46,7 +46,7 @@ function SearchResultsArticles({
       <div className="mt-4 flex flex-col gap-2">
         {articles?.nodes?.map((article) => {
           const articleUrl = urlWithTrackingParams({
-            baseUrl: `/blogs/${article.handle}`,
+            baseUrl: `/blog/${article.handle}`,
             trackingParams: article.trackingParameters,
             term,
           });
@@ -66,7 +66,7 @@ function SearchResultsArticles({
   );
 }
 
-function SearchResultsPages({term, pages}: PartialSearchResult<'pages'>) {
+function SearchResultsPages({ term, pages }: PartialSearchResult<'pages'>) {
   if (!pages?.nodes.length) {
     return null;
   }
@@ -113,10 +113,10 @@ function SearchResultsProducts({
         Productos
       </h2>
       <Pagination connection={products}>
-        {({nodes, isLoading, NextLink, PreviousLink}) => {
+        {({ nodes, isLoading, NextLink, PreviousLink }) => {
           const ItemsMarkup = nodes.map((product) => {
             const productUrl = urlWithTrackingParams({
-              baseUrl: `/products/${product.handle}`,
+              baseUrl: `/tienda/p/${product.handle}`,
               trackingParams: product.trackingParameters,
               term,
             });

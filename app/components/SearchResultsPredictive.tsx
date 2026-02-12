@@ -1,12 +1,13 @@
-import {Link, useFetcher, type Fetcher} from 'react-router';
-import {Image, Money} from '@shopify/hydrogen';
-import React, {useRef, useEffect} from 'react';
+import { Link, useFetcher, type Fetcher } from 'react-router';
+import { Image, Money } from '@shopify/hydrogen';
+import React, { useRef, useEffect } from 'react';
 import {
   getEmptyPredictiveSearchResult,
   urlWithTrackingParams,
   type PredictiveSearchReturn,
 } from '~/lib/search';
-import {useAside} from './Aside';
+import { useAside } from './Aside';
+import { cn, focusStyle } from '~/lib/utils';
 
 type PredictiveSearchItems = PredictiveSearchReturn['result']['items'];
 
@@ -43,7 +44,7 @@ export function SearchResultsPredictive({
   children,
 }: SearchResultsPredictiveProps) {
   const aside = useAside();
-  const {term, inputRef, fetcher, total, items} = usePredictiveSearch();
+  const { term, inputRef, fetcher, total, items } = usePredictiveSearch();
 
   /*
    * Utility that resets the search input
@@ -95,7 +96,7 @@ function SearchResultsPredictiveArticles({
       <ul className="mt-2 flex flex-col gap-2">
         {articles.map((article) => {
           const articleUrl = urlWithTrackingParams({
-            baseUrl: `/blogs/${article.blog.handle}/${article.handle}`,
+            baseUrl: `/blog/${article.handle}`,
             trackingParams: article.trackingParameters,
             term: term.current ?? '',
           });
@@ -105,7 +106,10 @@ function SearchResultsPredictiveArticles({
               <Link
                 onClick={closeSearch}
                 to={articleUrl}
-                className="group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light"
+                className={cn(
+                  "group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light transition-colors",
+                  focusStyle({ theme: 'action', focusType: 'inner' })
+                )}
               >
                 {article.image?.url ? (
                   <Image
@@ -145,7 +149,7 @@ function SearchResultsPredictiveCollections({
       <ul className="mt-2 flex flex-col gap-2">
         {collections.map((collection) => {
           const collectionUrl = urlWithTrackingParams({
-            baseUrl: `/collections/${collection.handle}`,
+            baseUrl: `/tienda/${collection.handle}`,
             trackingParams: collection.trackingParameters,
             term: term.current,
           });
@@ -155,7 +159,10 @@ function SearchResultsPredictiveCollections({
               <Link
                 onClick={closeSearch}
                 to={collectionUrl}
-                className="group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light"
+                className={cn(
+                  "group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light transition-colors",
+                  focusStyle({ theme: 'action', focusType: 'inner' })
+                )}
               >
                 {collection.image?.url ? (
                   <Image
@@ -205,7 +212,10 @@ function SearchResultsPredictivePages({
               <Link
                 onClick={closeSearch}
                 to={pageUrl}
-                className="group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light"
+                className={cn(
+                  "group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light transition-colors",
+                  focusStyle({ theme: 'action', focusType: 'inner' })
+                )}
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-extrabold uppercase tracking-tight">
@@ -236,7 +246,7 @@ function SearchResultsPredictiveProducts({
       <ul className="mt-2 flex flex-col gap-2">
         {products.map((product) => {
           const productUrl = urlWithTrackingParams({
-            baseUrl: `/products/${product.handle}`,
+            baseUrl: `/tienda/p/${product.handle}`,
             trackingParams: product.trackingParameters,
             term: term.current,
           });
@@ -248,7 +258,10 @@ function SearchResultsPredictiveProducts({
               <Link
                 to={productUrl}
                 onClick={closeSearch}
-                className="group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light"
+                className={cn(
+                  "group flex items-center gap-3 rounded-lg border border-dark/10 bg-light p-3 hover:bg-dark hover:text-light transition-colors",
+                  focusStyle({ theme: 'action', focusType: 'inner' })
+                )}
               >
                 {image ? (
                   <Image
@@ -319,7 +332,7 @@ function SearchResultsPredictiveEmpty({
  * '''
  **/
 function usePredictiveSearch(): UsePredictiveSearchReturn {
-  const fetcher = useFetcher<PredictiveSearchReturn>({key: 'search'});
+  const fetcher = useFetcher<PredictiveSearchReturn>({ key: 'search' });
   const term = useRef<string>('');
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -334,8 +347,8 @@ function usePredictiveSearch(): UsePredictiveSearchReturn {
     }
   }, []);
 
-  const {items, total} =
+  const { items, total } =
     fetcher?.data?.result ?? getEmptyPredictiveSearchResult();
 
-  return {items, total, inputRef, term, fetcher};
+  return { items, total, inputRef, term, fetcher };
 }

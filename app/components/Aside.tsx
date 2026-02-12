@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import {cn} from '~/lib/utils';
+import { cn, focusStyle } from '~/lib/utils';
 
 type AsideType = 'search' | 'cart' | 'mobile' | 'closed';
 type AsideContextValue = {
@@ -33,7 +33,7 @@ export function Aside({
   type: AsideType;
   heading: React.ReactNode;
 }) {
-  const {type: activeType, close} = useAside();
+  const { type: activeType, close } = useAside();
   const expanded = type === activeType;
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function Aside({
             close();
           }
         },
-        {signal: abortController.signal},
+        { signal: abortController.signal },
       );
 
       return () => {
@@ -83,19 +83,24 @@ export function Aside({
           expanded ? 'translate-x-0' : 'translate-x-full',
         )}
       >
-        <header className="flex h-16 items-center justify-between border-b border-dark/10 px-5">
-          <h3 className="text-sm font-extrabold uppercase tracking-tight">
-            {heading}
-          </h3>
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-dark/10 bg-light text-xl font-bold hover:bg-dark hover:text-light"
-            onClick={close}
-            aria-label="Cerrar"
-          >
-            &times;
-          </button>
-        </header>
-        <main className="h-[calc(100%-4rem)] overflow-auto p-5">
+        {type !== 'cart' && (
+          <header className="flex h-16 items-center justify-between border-b border-dark/10 px-5">
+            <h3 className="text-sm font-extrabold uppercase tracking-tight">
+              {heading}
+            </h3>
+            <button
+              className={cn(
+                "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-dark/10 bg-light text-xl font-bold hover:bg-dark hover:text-light transition-colors",
+                focusStyle({ theme: 'action' })
+              )}
+              onClick={close}
+              aria-label="Cerrar"
+            >
+              &times;
+            </button>
+          </header>
+        )}
+        <main className={cn("overflow-auto", type === 'cart' ? "h-full p-8" : "h-[calc(100%-4rem)] p-5")}>
           {children}
         </main>
       </aside>
@@ -105,7 +110,7 @@ export function Aside({
 
 const AsideContext = createContext<AsideContextValue | null>(null);
 
-Aside.Provider = function AsideProvider({children}: {children: ReactNode}) {
+Aside.Provider = function AsideProvider({ children }: { children: ReactNode }) {
   const [type, setType] = useState<AsideType>('closed');
 
   return (
