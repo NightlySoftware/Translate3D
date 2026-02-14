@@ -10,10 +10,16 @@ import { ProductItem } from '~/components/ProductItem';
 
 export type BestSellerProduct = {
   id: string;
+  availableForSale?: boolean;
   title: string;
   handle: string;
   tags: string[];
-  totalInventory?: number;
+  collections?: {
+    nodes: Array<{
+      handle: string;
+      title?: string;
+    }>;
+  };
   featuredImage?: {
     id?: string | null;
     url: string;
@@ -27,6 +33,25 @@ export type BestSellerProduct = {
 };
 
 type FilterKey = 'descuento' | 'nuevo' | 'disponible' | null;
+
+const PREFERRED_COLLECTION_HANDLES = new Set([
+  'modelos-3d',
+  'filamentos',
+  'resinas',
+  'refacciones',
+]);
+
+function resolveCollectionHandle(product: BestSellerProduct) {
+  const handles = (product.collections?.nodes ?? [])
+    .map((collection) => collection.handle)
+    .filter(Boolean);
+
+  const preferred = handles.find((handle) => PREFERRED_COLLECTION_HANDLES.has(handle));
+  if (preferred) return preferred;
+
+  const fallback = handles.find((handle) => handle !== 'frontpage' && handle !== 'all');
+  return fallback;
+}
 
 export function BestSellers({ products }: { products: BestSellerProduct[] }) {
   const [filter, setFilter] = useState<FilterKey>(null);
@@ -76,7 +101,10 @@ export function BestSellers({ products }: { products: BestSellerProduct[] }) {
                   key={product.id}
                   className="basis-full pl-0 border-r border-dark last:border-r-0 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                 >
-                  <ProductItem product={product as any} />
+                  <ProductItem
+                    product={product as any}
+                    collectionHandle={resolveCollectionHandle(product)}
+                  />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -122,4 +150,3 @@ function FilterButton({
     />
   );
 }
-

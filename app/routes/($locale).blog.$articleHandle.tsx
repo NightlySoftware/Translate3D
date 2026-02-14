@@ -1,6 +1,10 @@
-import { useLoaderData } from 'react-router';
-import type { Route } from './+types/($locale).blogs.$blogHandle.$articleHandle';
+import { Link, useLoaderData } from 'react-router';
+import type { Route } from './+types/($locale).blog.$articleHandle';
 import { Image } from '@shopify/hydrogen';
+import { Button } from '~/components/ui/button';
+import { Breadcrumbs } from '~/components/ui/Breadcrumbs';
+import { SectionSeparator } from '~/components/SectionSeparator';
+import { BlogPostListItem } from '~/components/blog/BlogPostListItem';
 import { redirectIfHandleIsLocalized } from '~/lib/redirect';
 
 export const meta: Route.MetaFunction = ({ data }) => {
@@ -8,19 +12,12 @@ export const meta: Route.MetaFunction = ({ data }) => {
 };
 
 export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
   return { ...deferredData, ...criticalData };
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
 async function loadCriticalData({ context, request, params }: Route.LoaderArgs) {
   const { articleHandle } = params;
   const blogHandle = 'blog';
@@ -33,7 +30,6 @@ async function loadCriticalData({ context, request, params }: Route.LoaderArgs) 
     context.storefront.query(ARTICLE_QUERY, {
       variables: { blogHandle, articleHandle },
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!blog?.articleByHandle) {
@@ -53,21 +49,19 @@ async function loadCriticalData({ context, request, params }: Route.LoaderArgs) 
   );
 
   const article = blog.articleByHandle;
+  const relatedArticles = (blog.articles?.nodes ?? [])
+    .filter((candidate: any) => candidate.id !== article.id)
+    .slice(0, 3);
 
-  return { article };
+  return { article, relatedArticles };
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
 function loadDeferredData({ context }: Route.LoaderArgs) {
   return {};
 }
 
 export default function Article() {
-  const { article } = useLoaderData<typeof loader>();
+  const { article, relatedArticles } = useLoaderData<typeof loader>();
   const { title, image, contentHtml, author } = article;
 
   const publishedDate = new Intl.DateTimeFormat('es-MX', {
@@ -76,31 +70,120 @@ export default function Article() {
     day: 'numeric',
   }).format(new Date(article.publishedAt));
 
-  return (
-    <div className="mx-auto w-full max-w-3xl px-5 py-16">
-      <h1 className="text-[clamp(2.25rem,5vw,3.25rem)] font-extrabold uppercase leading-[0.95] tracking-tight">
-        {title}
-      </h1>
-      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-tight text-tgray">
-        <time dateTime={article.publishedAt}>{publishedDate}</time>
-        <span aria-hidden>&middot;</span>
-        <address className="not-italic">{author?.name}</address>
-      </div>
+  const displayAuthor =
+    author?.name && !/shopify\s*api/i.test(author.name)
+      ? author.name
+      : 'Translate3D';
 
-      {image && (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-dark/10">
-          <Image data={image} sizes="90vw" loading="eager" />
+  const breadcrumbs = [
+    { label: 'Blog', href: '/blog' },
+    { label: 'Destacados', href: '/blog' },
+    { label: 'Este articulo', current: true },
+  ];
+
+  return (
+    <div className="mx-auto flex w-full max-w-[1920px] flex-col px-5 pb-20 pt-24 md:px-10 lg:pt-32">
+      <section className="flex flex-col gap-10 border-b border-dark pb-12">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div className="lg:max-w-[360px]">
+            <Breadcrumbs items={breadcrumbs} />
+          </div>
+
+          <div className="flex-1 lg:px-6">
+            <h1 className="text-[clamp(2rem,4.5vw,3.4rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-dark">
+              {title}
+            </h1>
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-dark/60">
+              <time dateTime={article.publishedAt}>{publishedDate}</time>
+              <span aria-hidden>&middot;</span>
+              <address className="not-italic">{displayAuthor}</address>
+            </div>
+          </div>
+
+          <div className="flex max-w-[380px] flex-wrap justify-start gap-2 lg:justify-end">
+            {((article as any).tags ?? ['Blog']).slice(0, 4).map((tag: string) => (
+              <span
+                key={tag}
+                className="rounded-full border border-dark/20 px-3 py-1 text-xs font-bold uppercase tracking-wide text-dark/70"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
-      )}
-      <div
-        dangerouslySetInnerHTML={{ __html: contentHtml }}
-        className="mt-10 flex flex-col gap-4 text-base font-normal normal-case leading-[1.6] text-dark/90"
-      />
+
+        <div className="overflow-hidden rounded-md border border-dark/10 bg-lightgray">
+          {image ? (
+            <Image
+              data={image}
+              alt={image.altText || title}
+              sizes="(min-width: 1200px) 1840px, 100vw"
+              loading="eager"
+              className="h-auto w-full object-cover"
+            />
+          ) : (
+            <div className="flex aspect-[16/7] w-full items-center justify-center text-sm font-bold uppercase text-dark/40">
+              Sin imagen
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="mx-auto mt-12 w-full max-w-[80ch]">
+        <article
+          className="prose prose-base max-w-none text-base leading-8 text-dark/90 prose-headings:font-extrabold prose-headings:uppercase prose-headings:tracking-tight prose-p:my-5 prose-li:my-2 prose-a:text-primary"
+          dangerouslySetInnerHTML={{ __html: contentHtml }}
+        />
+      </section>
+
+      <section className="mt-16 border-y border-dark/40 py-12">
+        <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div className="overflow-hidden rounded-md border border-dark/10 bg-lightgray">
+            <img
+              src={image?.url || 'https://placehold.co/993x717'}
+              alt={image?.altText || 'Galeria de productos'}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+
+          <div className="flex flex-col items-start gap-4">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-dark/60">
+              Galeria de productos
+            </p>
+            <h2 className="text-4xl font-extrabold uppercase leading-[0.95] tracking-tight text-dark">
+              Tienda de equipo y refacciones
+            </h2>
+            <p className="text-sm font-medium normal-case leading-relaxed text-dark/70">
+              Descubre materiales, herramientas y accesorios para mantener tu
+              operacion de impresion 3D en marcha.
+            </p>
+            <Button asChild variant="action">
+              <Link to="/tienda/refacciones" prefetch="intent">
+                Ver productos
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-16">
+        <h2 className="text-[clamp(2.25rem,5vw,3rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-dark">
+          Otros articulos
+        </h2>
+
+        <div className="mt-6">
+          {relatedArticles.map((related: any) => (
+            <BlogPostListItem key={related.id} article={related} loading="lazy" />
+          ))}
+        </div>
+      </section>
+
+      <SectionSeparator />
     </div>
   );
 }
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/blog#field-blog-articlebyhandle
 const ARTICLE_QUERY = `#graphql
   query Article(
     $articleHandle: String!
@@ -111,10 +194,12 @@ const ARTICLE_QUERY = `#graphql
     blog(handle: $blogHandle) {
       handle
       articleByHandle(handle: $articleHandle) {
+        id
         handle
         title
         contentHtml
         publishedAt
+        tags
         author: authorV2 {
           name
         }
@@ -128,6 +213,26 @@ const ARTICLE_QUERY = `#graphql
         seo {
           description
           title
+        }
+      }
+      articles(first: 8, sortKey: PUBLISHED_AT, reverse: true) {
+        nodes {
+          id
+          handle
+          title
+          excerpt
+          tags
+          publishedAt
+          image {
+            id
+            altText
+            url
+            width
+            height
+          }
+          blog {
+            handle
+          }
         }
       }
     }

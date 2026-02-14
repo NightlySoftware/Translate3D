@@ -23,7 +23,7 @@ export function CartSummary({ cart, layout }: CartSummaryProps) {
       <div className="flex flex-col gap-4">
         <dl className="flex items-center justify-between">
           <dt className="text-xs font-extrabold uppercase tracking-tight text-dark">
-            Art&iacute;culos ({totalQuantity})
+            Subtotal ({totalQuantity} art&iacute;culos)
           </dt>
           <dd className="text-base font-extrabold text-dark tracking-tight">
             {cart?.cost?.subtotalAmount?.amount ? (
@@ -37,25 +37,14 @@ export function CartSummary({ cart, layout }: CartSummaryProps) {
         <CartDiscounts discountCodes={cart?.discountCodes} />
         <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
 
-        <div className="border-t border-dark/10 pt-4 mt-2">
-          <dl className="flex items-center justify-between">
-            <dt className="text-[20px] font-extrabold uppercase tracking-tighter text-dark">
-              Total
-            </dt>
-            <dd className="text-[24px] font-extrabold text-dark tracking-tighter">
-              {cart?.cost?.totalAmount?.amount ? (
-                <Money data={cart?.cost?.totalAmount} />
-              ) : (
-                '-'
-              )}
-            </dd>
-          </dl>
-        </div>
+        <p className="mt-2 text-[11px] text-tgray text-center font-semibold leading-tight px-4 uppercase tracking-tight">
+          IVA, env&iacute;o y otros cargos se calculan al final
+        </p>
 
         <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
 
         <p className="mt-4 text-[10px] text-tgray text-center font-medium leading-tight px-4">
-          El costo del env&iacute;o y tu m&eacute;todo de pago ser&aacute;n procesados al continuar
+          El costo del env&iacute;o y tu m&eacute;todo de pago se procesan al continuar
         </p>
       </div>
     </div>

@@ -30,8 +30,24 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: ['set-cookie-parser', 'cookie', 'react-router'],
+      include: [
+        'use-sync-external-store/shim/with-selector.js',
+        'use-sync-external-store/shim/index.js',
+        'set-cookie-parser',
+        'cookie',
+        'react-router',
+      ],
     },
+    noExternal: [
+      '@tiptap/react',
+      '@tiptap/core',
+      '@tiptap/starter-kit',
+      '@tiptap/extension-link',
+      '@tiptap/extension-placeholder',
+      '@tiptap/extension-underline',
+      '@tiptap/extension-image',
+      'use-sync-external-store',
+    ],
   },
   server: {
     allowedHosts: ['.tryhydrogen.dev'],

@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { ChevronDown, Menu, Search, ShoppingCart, User } from 'lucide-react';
+import {Input} from '~/components/ui/input';
 
 interface HeaderProps {
   header: HeaderQuery;
@@ -192,17 +193,13 @@ function SearchBar() {
       method="get"
       className="flex items-center gap-1"
     >
-      <input
+      <Input
         type="search"
         name="q"
         placeholder="Buscar"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className={cn(
-          'rounded-md border border-dark bg-white placeholder:text-dark/50 placeholder:font-bold placeholder:uppercase px-3 py-1.5 text-sm font-medium transition-all text-dark min-w-[200px]',
-          focusStyle({ theme: 'action' })
-        )}
-        style={{ fontFamily: 'inherit' }}
+        className="min-w-[200px]"
       />
       <Button
         type="submit"

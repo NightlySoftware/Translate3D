@@ -61,10 +61,10 @@ const BEST_SELLERS_STORE_QUERY = `#graphql
     products(first: 8, sortKey: BEST_SELLING) {
       nodes {
         id
+        availableForSale
         handle
         title
         tags
-        totalInventory
         featuredImage {
           id
           altText

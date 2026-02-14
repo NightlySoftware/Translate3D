@@ -19,6 +19,7 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
     id
     title
     quantity
+    variantId
     price {
       ...OrderMoney
     }
@@ -45,8 +46,10 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
   fragment Order on Order {
     id
     name
+    number
     confirmationNumber
     statusPageUrl
+    financialStatus
     fulfillmentStatus
     processedAt
     fulfillments(first: 1) {

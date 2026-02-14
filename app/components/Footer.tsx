@@ -3,8 +3,9 @@ import { Await, Link } from 'react-router';
 import type { FooterQuery, HeaderQuery } from 'storefrontapi.generated';
 import { Button } from '~/components/ui/button';
 import { SectionSeparator } from '~/components/SectionSeparator';
-import { ArrowDown, Facebook, Instagram, Youtube } from 'lucide-react';
+import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { cn, focusStyle } from '~/lib/utils';
+import {OrderTracker} from '~/components/OrderTracker';
 
 import { useIsMobile } from '~/hooks/use-mobile';
 
@@ -69,39 +70,8 @@ function FooterHero() {
 
 function FooterTracker() {
   return (
-    <div className="flex w-full justify-between items-center gap-4 px-4 pb-10">
-      <div className="flex flex-col w-full font-extrabold bg-primary rounded p-5 gap-20">
-        <div className="flex justify-between">
-          <p className="flex text-[10px] leading-[100%] font-normal gap-20 lg:gap-80">
-            <span>RASTREADOR</span>
-            <span>
-              &iquest;YA
-              <br /> HAS COMPRADO
-              <br /> CON NOSOTROS?
-            </span>
-            <span className="hidden md:block">
-              BUSCA
-              <br /> R&Aacute;PIDAMENTE EL
-              <br /> ESTATUS DE TU PEDIDO
-            </span>
-          </p>
-          <ArrowDown className="w-4 h-4 text-white" />
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex w-full justify-between items-end gap-4">
-            <input
-              type="text"
-              placeholder="Numero de pedido"
-              className="placeholder:text-white/60 placeholder:focus:text-white/40 text-[clamp(2.5rem,5vw,64px)] bg-transparent focus:outline-none uppercase tracking-tight w-full lg:w-[calc(100%-200px)]"
-            />
-            <button className="hidden lg:block text-center text-white text-[64px] uppercase tracking-tight">
-              Buscar
-            </button>
-          </div>
-          <div className="w-full h-4 bg-white rounded -mt-2" />
-        </div>
-      </div>
+    <div className="flex w-full items-center justify-between gap-4 px-4 pb-10">
+      <OrderTracker variant="footer" />
     </div>
   );
 }

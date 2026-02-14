@@ -58,7 +58,11 @@ export function ProductItem({
 
         <div className="flex w-full justify-center items-center gap-2.5">
           {((product as any).tags ?? []).slice(0, 3).map((tag: string) => (
-            <TagChip key={tag} label={tag} inventory={(product as any).totalInventory} />
+            <TagChip
+              key={tag}
+              label={tag}
+              availableForSale={(product as any).availableForSale}
+            />
           ))}
         </div>
       </Link>

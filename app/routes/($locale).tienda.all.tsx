@@ -58,7 +58,6 @@ export default function Collection() {
       <div className="mt-10 border-t border-dark">
         <PaginatedResourceSection<CollectionItemFragment>
           connection={products}
-          total={products.totalCount}
           resourcesClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           resourceName="Productos"
         >
@@ -86,6 +85,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
   }
   fragment CollectionItem on Product {
     id
+    availableForSale
     handle
     title
     tags
@@ -118,7 +118,6 @@ const CATALOG_QUERY = `#graphql
     $endCursor: String
   ) @inContext(country: $country, language: $language) {
     products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
-      totalCount
       nodes {
         ...CollectionItem
       }

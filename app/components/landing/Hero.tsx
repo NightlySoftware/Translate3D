@@ -1,5 +1,4 @@
-import { ArrowDown } from 'lucide-react';
-import { cn, focusStyle } from '~/lib/utils';
+import {OrderTracker} from '~/components/OrderTracker';
 
 export function Hero() {
   return (
@@ -17,44 +16,7 @@ export function Hero() {
 
         {/* Order tracker section */}
         <div className="flex w-full flex-col gap-10 md:gap-20 px-5 pb-10">
-          {/* Tracker labels */}
-          <div className="flex justify-between">
-            <p className="flex flex-wrap justify-between gap-4 md:gap-20 text-[10px] font-normal leading-[100%]">
-              <span className="w-full md:w-auto">RASTREADOR</span>
-              <span>
-                ¿YA
-                <br /> HAS COMPRADO
-                <br /> CON NOSOTROS?
-              </span>
-              <span>
-                BUSCA
-                <br /> RÁPIDAMENTE EL
-                <br /> ESTATUS DE TU PEDIDO
-              </span>
-            </p>
-            <ArrowDown className="h-4 w-4 text-white" />
-          </div>
-
-          {/* Input + button */}
-          <div className="flex flex-col">
-            <div className="flex w-full items-end justify-between gap-4">
-              <input
-                type="text"
-                placeholder="Numero de pedido"
-                className={cn(
-                  "flex-1 min-w-0 bg-transparent text-[24px] md:text-[52px] lg:text-[64px] uppercase tracking-tight placeholder:text-white/60 placeholder:focus:text-white/40 rounded",
-                  focusStyle({ theme: 'action' })
-                )}
-              />
-              <button className={cn(
-                "whitespace-nowrap text-center text-[24px] md:text-[52px] lg:text-[64px] uppercase tracking-tight text-white rounded",
-                focusStyle({ theme: 'action' })
-              )}>
-                Buscar
-              </button>
-            </div>
-            <div className="-mt-1 md:-mt-2 h-2 md:h-4 w-full rounded bg-white" />
-          </div>
+          <OrderTracker variant="hero" />
         </div>
       </div>
 

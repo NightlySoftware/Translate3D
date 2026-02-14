@@ -9,6 +9,7 @@ import {
   Scripts,
   ScrollRestoration,
   useRouteLoaderData,
+  useLocation,
 } from 'react-router';
 import type { Route } from './+types/root';
 import favicon from '~/assets/favicon.svg';
@@ -192,9 +193,24 @@ export function Layout({ children }: { children?: React.ReactNode }) {
 
 export default function App() {
   const data = useRouteLoaderData<RootLoader>('root');
+  const location = useLocation();
 
   if (!data) {
     return <Outlet />;
+  }
+
+  const isAdminRoute = /^\/admin(?:\/|$)/.test(location.pathname);
+
+  if (isAdminRoute) {
+    return (
+      <Analytics.Provider
+        cart={data.cart}
+        shop={data.shop}
+        consent={data.consent}
+      >
+        <Outlet />
+      </Analytics.Provider>
+    );
   }
 
   return (
@@ -212,30 +228,66 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
+  const location = useLocation();
   let errorMessage = 'Error desconocido';
   let errorStatus = 500;
+  let debugStack = '';
 
   if (isRouteErrorResponse(error)) {
     errorMessage = error?.data?.message ?? error.data;
     errorStatus = error.status;
   } else if (error instanceof Error) {
     errorMessage = error.message;
+    debugStack = error.stack || '';
   }
 
+  const isNotFound = errorStatus === 404;
+  const timestamp = new Date().toISOString();
+
   return (
-    <div className="mx-auto flex min-h-[60vh] w-full max-w-3xl flex-col items-start justify-center gap-4 px-5 py-16 text-dark">
-      <p className="text-sm font-extrabold uppercase tracking-tight text-primary">
-        Error {errorStatus}
-      </p>
-      <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[0.95] tracking-tight">
-        Algo sali&oacute; mal
-      </h1>
-      {errorMessage ? (
-        <pre className="w-full overflow-auto rounded-lg border border-dark/10 bg-lightgray p-4 text-sm text-dark/80">
-          {errorMessage}
-        </pre>
-      ) : null}
-    </div>
+    <main className="mx-auto flex min-h-[65vh] w-full max-w-4xl flex-col items-start justify-center gap-4 px-5 py-16 text-dark">
+      <div className="w-full rounded-2xl border border-dark/15 bg-white p-6">
+        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-primary">Error {errorStatus}</p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-dark">
+          {isNotFound ? 'No encontramos esta página' : 'Algo salió mal'}
+        </h1>
+        <p className="mt-2 text-sm text-dark/75">
+          {isNotFound
+            ? 'La URL que abriste no existe o fue movida. Revisa el enlace e intenta nuevamente.'
+            : 'Ocurrió un problema inesperado. Puedes copiar la información de depuración y enviarla a soporte.'}
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a
+            href="/"
+            className="inline-flex items-center rounded border border-dark bg-dark px-4 py-2 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary"
+          >
+            Ir al inicio
+          </a>
+          <a
+            href="/soporte"
+            className="inline-flex items-center rounded border border-dark/20 bg-light px-4 py-2 text-xs font-extrabold uppercase tracking-tight text-dark hover:border-dark"
+          >
+            Contactar soporte
+          </a>
+        </div>
+
+        {isNotFound ? null : (
+          <div className="mt-5 rounded-lg border border-dark/10 bg-light p-4 text-xs text-dark/80">
+            <p className="font-extrabold uppercase tracking-tight text-dark">Depuración</p>
+            <p className="mt-2">Ruta: {location.pathname}</p>
+            <p>Fecha: {timestamp}</p>
+            <p>Código: {errorStatus}</p>
+            <p className="mt-2 break-words">Mensaje: {String(errorMessage || 'Sin mensaje')}</p>
+            {debugStack ? (
+              <pre className="mt-2 max-h-64 overflow-auto rounded border border-dark/10 bg-white p-3 text-[11px]">
+                {debugStack}
+              </pre>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
 

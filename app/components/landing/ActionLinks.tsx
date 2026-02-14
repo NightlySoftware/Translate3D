@@ -30,7 +30,7 @@ export function ActionLinks() {
               los m&aacute;s altos est&aacute;ndares.
             </p>
             <Button asChild variant="action" className="w-fit">
-              <Link to="/cotizacion" prefetch="intent">
+              <Link to="/servicios" prefetch="intent">
                 Cotiza tus ideas <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -43,7 +43,7 @@ export function ActionLinks() {
                 to={l.to}
                 prefetch="intent"
                 className={cn(
-                  'group/link relative flex w-full items-center gap-20 border-t border-dark px-5 py-3 text-dark transition-colors duration-300 hover:text-light rounded',
+                  'group/link relative flex w-full items-center gap-20 border-t border-dark px-5 py-3 text-dark transition-colors duration-300 hover:text-light',
                   focusStyle({ theme: 'action', focusType: 'inner' })
                 )}
               >

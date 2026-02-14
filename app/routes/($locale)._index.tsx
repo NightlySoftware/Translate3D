@@ -229,6 +229,12 @@ const HOME_BEST_SELLERS_QUERY = `#graphql
     title
     handle
     tags
+    collections(first: 10) {
+      nodes {
+        handle
+        title
+      }
+    }
     featuredImage {
       id
       url

@@ -323,6 +323,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
   }
   fragment ProductItem on Product {
     id
+    availableForSale
     handle
     title
     tags

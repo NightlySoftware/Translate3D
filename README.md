@@ -23,7 +23,9 @@ bun install
 bun run dev
 ```
 
-Nota: para que la app funcione de verdad necesitas conectar una tienda de Shopify (Storefront API token).
+Nota:
+- `bun run dev` usa `--customer-account-push`, por lo que requiere internet para generar dominio de túnel y habilitar login de Customer Account API en local.
+- para que la app funcione de verdad necesitas conectar una tienda de Shopify (Storefront API token).
 
 ## Conectar Shopify (Storefront API)
 

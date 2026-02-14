@@ -1,4 +1,4 @@
-import type {CustomerAddressInput} from '@shopify/hydrogen/customer-account-api-types';
+import type { CustomerAddressInput } from '@shopify/hydrogen/customer-account-api-types';
 import type {
   AddressFragment,
   CustomerFragment,
@@ -6,12 +6,14 @@ import type {
 import {
   data,
   Form,
+  redirect,
   useActionData,
   useNavigation,
   useOutletContext,
   type Fetcher,
 } from 'react-router';
-import type {Route} from './+types/($locale).account.addresses';
+import {useState} from 'react';
+import type { Route } from './+types/($locale).account.addresses';
 import {
   UPDATE_ADDRESS_MUTATION,
   DELETE_ADDRESS_MUTATION,
@@ -28,17 +30,16 @@ export type ActionResponse = {
 };
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Direcciones'}];
+  return [{ title: 'Direcciones' }];
 };
 
-export async function loader({context}: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   context.customerAccount.handleAuthStatus();
-
-  return {};
+  return redirect('/account/profile');
 }
 
-export async function action({request, context}: Route.ActionArgs) {
-  const {customerAccount} = context;
+export async function action({ request, context }: Route.ActionArgs) {
+  const { customerAccount } = context;
 
   try {
     const form = await request.formData();
@@ -54,7 +55,7 @@ export async function action({request, context}: Route.ActionArgs) {
     const isLoggedIn = await customerAccount.isLoggedIn();
     if (!isLoggedIn) {
       return data(
-        {error: {[addressId]: 'No autorizado'}},
+        { error: { [addressId]: 'No autorizado' } },
         {
           status: 401,
         },
@@ -89,7 +90,7 @@ export async function action({request, context}: Route.ActionArgs) {
       case 'POST': {
         // handle new address creation
         try {
-          const {data, errors} = await customerAccount.mutate(
+          const { data, errors } = await customerAccount.mutate(
             CREATE_ADDRESS_MUTATION,
             {
               variables: {
@@ -109,7 +110,7 @@ export async function action({request, context}: Route.ActionArgs) {
           }
 
           if (!data?.customerAddressCreate?.customerAddress) {
-            throw new Error('No se pudo crear la direcci\u00f3n.');
+            throw new Error('No se pudo crear la dirección.');
           }
 
           return {
@@ -120,14 +121,14 @@ export async function action({request, context}: Route.ActionArgs) {
         } catch (error: unknown) {
           if (error instanceof Error) {
             return data(
-              {error: {[addressId]: error.message}},
+              { error: { [addressId]: error.message } },
               {
                 status: 400,
               },
             );
           }
           return data(
-            {error: {[addressId]: error}},
+            { error: { [addressId]: error } },
             {
               status: 400,
             },
@@ -138,7 +139,7 @@ export async function action({request, context}: Route.ActionArgs) {
       case 'PUT': {
         // handle address updates
         try {
-          const {data, errors} = await customerAccount.mutate(
+          const { data, errors } = await customerAccount.mutate(
             UPDATE_ADDRESS_MUTATION,
             {
               variables: {
@@ -159,7 +160,7 @@ export async function action({request, context}: Route.ActionArgs) {
           }
 
           if (!data?.customerAddressUpdate?.customerAddress) {
-            throw new Error('No se pudo actualizar la direcci\u00f3n.');
+            throw new Error('No se pudo actualizar la dirección.');
           }
 
           return {
@@ -170,14 +171,14 @@ export async function action({request, context}: Route.ActionArgs) {
         } catch (error: unknown) {
           if (error instanceof Error) {
             return data(
-              {error: {[addressId]: error.message}},
+              { error: { [addressId]: error.message } },
               {
                 status: 400,
               },
             );
           }
           return data(
-            {error: {[addressId]: error}},
+            { error: { [addressId]: error } },
             {
               status: 400,
             },
@@ -188,7 +189,7 @@ export async function action({request, context}: Route.ActionArgs) {
       case 'DELETE': {
         // handles address deletion
         try {
-          const {data, errors} = await customerAccount.mutate(
+          const { data, errors } = await customerAccount.mutate(
             DELETE_ADDRESS_MUTATION,
             {
               variables: {
@@ -207,21 +208,21 @@ export async function action({request, context}: Route.ActionArgs) {
           }
 
           if (!data?.customerAddressDelete?.deletedAddressId) {
-            throw new Error('No se pudo eliminar la direcci\u00f3n.');
+            throw new Error('No se pudo eliminar la dirección.');
           }
 
-          return {error: null, deletedAddress: addressId};
+          return { error: null, deletedAddress: addressId };
         } catch (error: unknown) {
           if (error instanceof Error) {
             return data(
-              {error: {[addressId]: error.message}},
+              { error: { [addressId]: error.message } },
               {
                 status: 400,
               },
             );
           }
           return data(
-            {error: {[addressId]: error}},
+            { error: { [addressId]: error } },
             {
               status: 400,
             },
@@ -231,7 +232,7 @@ export async function action({request, context}: Route.ActionArgs) {
 
       default: {
         return data(
-          {error: {[addressId]: 'M\u00e9todo no permitido'}},
+          { error: { [addressId]: 'Método no permitido' } },
           {
             status: 405,
           },
@@ -241,14 +242,14 @@ export async function action({request, context}: Route.ActionArgs) {
   } catch (error: unknown) {
     if (error instanceof Error) {
       return data(
-        {error: error.message},
+        { error: error.message },
         {
           status: 400,
         },
       );
     }
     return data(
-      {error},
+      { error },
       {
         status: 400,
       },
@@ -257,8 +258,9 @@ export async function action({request, context}: Route.ActionArgs) {
 }
 
 export default function Addresses() {
-  const {customer} = useOutletContext<{customer: CustomerFragment}>();
-  const {defaultAddress, addresses} = customer;
+  const { customer } = useOutletContext<{ customer: CustomerFragment }>();
+  const { defaultAddress, addresses } = customer;
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
   return (
     <div className="flex flex-col gap-8">
@@ -267,17 +269,33 @@ export default function Addresses() {
           Direcciones
         </h2>
         <p className="mt-1 text-sm font-normal normal-case text-dark/70">
-          Administra tus direcciones de env&iacute;o.
+          Administra tus direcciones de envío.
         </p>
       </div>
 
       <div className="rounded-2xl border border-dark/10 bg-light p-5">
-        <p className="text-xs font-extrabold uppercase tracking-tight text-tgray">
-          Nueva direcci&oacute;n
-        </p>
-        <div className="mt-4">
-          <NewAddressForm />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-tight text-tgray">
+              Nueva dirección
+            </p>
+            <p className="mt-1 text-sm text-dark/70">
+              Agrega una nueva dirección de envío para futuras compras.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowNewAddressForm((value) => !value)}
+            className="rounded-lg border border-dark bg-dark px-4 py-2 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary"
+          >
+            {showNewAddressForm ? 'Cerrar formulario' : 'Agregar dirección'}
+          </button>
         </div>
+        {showNewAddressForm ? (
+          <div className="mt-4">
+            <NewAddressForm onCancel={() => setShowNewAddressForm(false)} />
+          </div>
+        ) : null}
       </div>
 
       {!addresses.nodes.length ? (
@@ -296,7 +314,7 @@ export default function Addresses() {
   );
 }
 
-function NewAddressForm() {
+function NewAddressForm({onCancel}: {onCancel: () => void}) {
   const newAddress = {
     address1: '',
     address2: '',
@@ -317,15 +335,22 @@ function NewAddressForm() {
       address={newAddress}
       defaultAddress={null}
     >
-      {({stateForMethod}) => (
-        <div>
+      {({ stateForMethod }) => (
+        <div className="flex flex-wrap items-center gap-2">
           <button
             disabled={stateForMethod('POST') !== 'idle'}
             formMethod="POST"
             type="submit"
             className="rounded-lg border border-primary bg-primary px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light transition-colors hover:border-dark hover:bg-dark disabled:opacity-60"
           >
-            {stateForMethod('POST') !== 'idle' ? 'Creando\u2026' : 'Crear'}
+            {stateForMethod('POST') !== 'idle' ? 'Creando...' : 'Crear'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-dark/20 bg-light px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-dark hover:border-dark hover:bg-lightgray"
+          >
+            Cancelar
           </button>
         </div>
       )}
@@ -350,7 +375,7 @@ function ExistingAddresses({
             address={address}
             defaultAddress={defaultAddress}
           >
-            {({stateForMethod}) => (
+            {({ stateForMethod }) => (
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   disabled={stateForMethod('PUT') !== 'idle'}
@@ -359,7 +384,7 @@ function ExistingAddresses({
                   className="rounded-lg border border-dark bg-dark px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-light hover:border-primary hover:bg-primary disabled:opacity-60"
                 >
                   {stateForMethod('PUT') !== 'idle'
-                    ? 'Guardando\u2026'
+                    ? 'Guardando...'
                     : 'Guardar'}
                 </button>
                 <button
@@ -369,7 +394,7 @@ function ExistingAddresses({
                   className="rounded-lg border border-dark/20 bg-light px-4 py-3 text-xs font-extrabold uppercase tracking-tight text-dark hover:border-dark hover:bg-lightgray disabled:opacity-60"
                 >
                   {stateForMethod('DELETE') !== 'idle'
-                    ? 'Eliminando\u2026'
+                    ? 'Eliminando...'
                     : 'Eliminar'}
                 </button>
               </div>
@@ -394,7 +419,7 @@ export function AddressForm({
     stateForMethod: (method: 'PUT' | 'POST' | 'DELETE') => Fetcher['state'];
   }) => React.ReactNode;
 }) {
-  const {state, formMethod} = useNavigation();
+  const { state, formMethod } = useNavigation();
   const action = useActionData<ActionResponse>();
   const error = action?.error?.[addressId];
   const isDefaultAddress = defaultAddress?.id === addressId;
@@ -468,15 +493,15 @@ export function AddressForm({
             htmlFor={fieldId('address1')}
             className="text-xs font-extrabold uppercase tracking-tight text-tgray"
           >
-            Direcci&oacute;n l&iacute;nea 1*
+            Dirección línea 1*
           </label>
           <input
-            aria-label="Direcci\u00f3n l\u00ednea 1"
+            aria-label="Dirección línea 1"
             autoComplete="address-line1"
             defaultValue={address?.address1 ?? ''}
             id={fieldId('address1')}
             name="address1"
-            placeholder="Direcci\u00f3n l\u00ednea 1"
+            placeholder="Dirección línea 1"
             required
             type="text"
             className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -487,15 +512,15 @@ export function AddressForm({
             htmlFor={fieldId('address2')}
             className="text-xs font-extrabold uppercase tracking-tight text-tgray"
           >
-            Direcci&oacute;n l&iacute;nea 2
+            Dirección línea 2
           </label>
           <input
-            aria-label="Direcci\u00f3n l\u00ednea 2"
+            aria-label="Dirección línea 2"
             autoComplete="address-line2"
             defaultValue={address?.address2 ?? ''}
             id={fieldId('address2')}
             name="address2"
-            placeholder="Direcci\u00f3n l\u00ednea 2"
+            placeholder="Dirección línea 2"
             type="text"
             className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
@@ -543,15 +568,15 @@ export function AddressForm({
             htmlFor={fieldId('zip')}
             className="text-xs font-extrabold uppercase tracking-tight text-tgray"
           >
-            C&oacute;digo postal*
+            Código postal*
           </label>
           <input
-            aria-label="C\u00f3digo postal"
+            aria-label="Código postal"
             autoComplete="postal-code"
             defaultValue={address?.zip ?? ''}
             id={fieldId('zip')}
             name="zip"
-            placeholder="C\u00f3digo postal"
+            placeholder="Código postal"
             required
             type="text"
             className="w-full rounded-lg border border-dark/15 bg-light px-4 py-3 text-sm font-semibold text-dark placeholder:text-tgray focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -562,10 +587,10 @@ export function AddressForm({
             htmlFor={fieldId('territoryCode')}
             className="text-xs font-extrabold uppercase tracking-tight text-tgray"
           >
-            Pa&iacute;s (c&oacute;digo)*
+            País (código)*
           </label>
           <input
-            aria-label="Pa\u00eds (c\u00f3digo)"
+            aria-label="País (código)"
             autoComplete="country"
             defaultValue={address?.territoryCode ?? ''}
             id={fieldId('territoryCode')}
@@ -582,10 +607,10 @@ export function AddressForm({
             htmlFor={fieldId('phoneNumber')}
             className="text-xs font-extrabold uppercase tracking-tight text-tgray"
           >
-            Tel\u00e9fono
+            Teléfono
           </label>
           <input
-            aria-label="Tel\u00e9fono"
+            aria-label="Teléfono"
             autoComplete="tel"
             defaultValue={address?.phoneNumber ?? ''}
             id={fieldId('phoneNumber')}
@@ -608,7 +633,7 @@ export function AddressForm({
             htmlFor={fieldId('defaultAddress')}
             className="text-sm font-normal normal-case text-dark/80"
           >
-            Establecer como direcci&oacute;n principal
+            Establecer como dirección principal
           </label>
         </div>
         {error ? (

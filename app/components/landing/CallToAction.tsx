@@ -25,10 +25,10 @@ export function CallToAction() {
         </div>
 
         <Link
-          to="/cotizacion"
+          to="/servicios"
           prefetch="intent"
           className={cn(
-            "group/cta flex w-full flex-col gap-4 pb-4 border-dark lg:border-l lg:pl-4 lg:flex-row rounded px-2 md:px-0",
+            "group/cta flex w-full flex-col gap-4 pb-4 border-dark lg:border-l lg:pl-4 lg:flex-row px-2 md:px-0",
             focusStyle({ theme: 'action', focusType: 'inner' })
           )}
         >

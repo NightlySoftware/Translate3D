@@ -1,13 +1,24 @@
 import { cn } from '~/lib/utils';
 
-
-
-export function TagChip({ label, inventory }: { label: string; inventory?: number }) {
+export function TagChip({
+  label,
+  inventory,
+  availableForSale,
+  className,
+}: {
+  label: string;
+  inventory?: number;
+  availableForSale?: boolean;
+  className?: string;
+}) {
   const rawLabel = label.trim();
   const lowerLabel = rawLabel.toLowerCase();
 
   // Stock-related keywords to catch variations
-  const isStock = lowerLabel.includes('stock') || lowerLabel.includes('inventario');
+  const isStock =
+    lowerLabel.includes('stock') ||
+    lowerLabel.includes('inventario') ||
+    lowerLabel.includes('disponible');
   const isOut = lowerLabel.includes('sin') || lowerLabel.includes('out');
   const isLow = lowerLabel.includes('poca') || lowerLabel.includes('low');
 
@@ -39,12 +50,15 @@ export function TagChip({ label, inventory }: { label: string; inventory?: numbe
       finalLabel = 'STOCK';
       dotColor = 'bg-green-500';
     }
+  } else if (typeof availableForSale === 'boolean' && isStock) {
+    finalLabel = availableForSale ? 'STOCK' : 'SIN STOCK';
+    dotColor = availableForSale ? 'bg-green-500' : 'bg-red-500';
   }
 
   const finalCfg = { dot: dotColor, label: finalLabel };
 
   return (
-    <div className="flex uppercase items-center gap-2 rounded-md border border-gray-400 bg-light px-3 py-0.5 text-sm font-extrabold text-dark">
+    <div className={cn('flex uppercase items-center gap-2 rounded-md border border-gray-400 bg-light px-3 py-0.5 text-sm font-extrabold text-dark', className)}>
       {finalCfg.dot && <span className={cn('h-1.5 w-1.5 rounded-full', finalCfg.dot)} />}
       {finalCfg.label}
     </div>

@@ -194,3 +194,26 @@
 .animate-landing-marquee {
   animation: landing-marquee var(--marquee-duration, 24s) linear infinite;
 }
+
+/* Account date range picker */
+.react-datepicker {
+  border: 1px solid color-mix(in srgb, var(--brand-dark) 20%, transparent);
+  border-radius: 8px;
+  font-family: "Manrope", sans-serif;
+}
+
+.react-datepicker__header {
+  background: #fff;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-dark) 14%, transparent);
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  background: var(--brand-primary);
+  color: white;
+}
+
+.react-datepicker__day:hover {
+  background: color-mix(in srgb, var(--brand-primary) 15%, white);
+}

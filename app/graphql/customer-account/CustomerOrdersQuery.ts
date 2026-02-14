@@ -1,5 +1,22 @@
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Order
 export const ORDER_ITEM_FRAGMENT = `#graphql
+  fragment OrderListLineItem on LineItem {
+    id
+    title
+    quantity
+    variantTitle
+    price {
+      amount
+      currencyCode
+    }
+    image {
+      url
+      altText
+      width
+      height
+    }
+  }
+
   fragment OrderItem on Order {
     totalPrice {
       amount
@@ -16,6 +33,11 @@ export const ORDER_ITEM_FRAGMENT = `#graphql
     number
     confirmationNumber
     processedAt
+    lineItems(first: 5) {
+      nodes {
+        ...OrderListLineItem
+      }
+    }
   }
 ` as const;
 

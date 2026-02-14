@@ -1,17 +1,29 @@
+import {redirect} from 'react-router';
 import type {Route} from './+types/($locale).account_.login';
 
-export async function loader({request, context}: Route.LoaderArgs) {
+export const meta: Route.MetaFunction = () => {
+  return [{title: 'Iniciar sesion'}];
+};
+
+export async function loader({request, context, params}: Route.LoaderArgs) {
+  const isLoggedIn = await context.customerAccount.isLoggedIn();
+  const localePrefix = params.locale ? `/${params.locale}` : '';
+
+  if (isLoggedIn) {
+    return redirect(`${localePrefix}/account`);
+  }
+
   const url = new URL(request.url);
-  const acrValues = url.searchParams.get('acr_values') || undefined;
   const loginHint = url.searchParams.get('login_hint') || undefined;
-  const loginHintMode = url.searchParams.get('login_hint_mode') || undefined;
-  const locale = url.searchParams.get('locale') || undefined;
+  const locale = url.searchParams.get('locale') || 'es';
 
   return context.customerAccount.login({
     countryCode: context.storefront.i18n.country,
-    acrValues,
     loginHint,
-    loginHintMode,
     locale,
   });
+}
+
+export default function AccountLoginRoute() {
+  return null;
 }

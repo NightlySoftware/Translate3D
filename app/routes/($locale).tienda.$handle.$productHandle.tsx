@@ -21,12 +21,13 @@ import { SpecificationsTable } from '~/components/SpecificationsTable';
 import { CallToAction } from '~/components/landing/CallToAction';
 import { redirectIfHandleIsLocalized } from '~/lib/redirect';
 
-export const meta: Route.MetaFunction = ({ data }) => {
+export const meta: Route.MetaFunction = ({data, params}) => {
+  const categoryHandle = params.handle || 'all';
   return [
-    { title: `Translate3D | ${data?.product.title ?? ''}` },
+    {title: `Translate3D | ${data?.product.title ?? ''}`},
     {
       rel: 'canonical',
-      href: `/tienda/p/${data?.product.handle}`,
+      href: `/tienda/${categoryHandle}/${data?.product.handle}`,
     },
   ];
 };
@@ -162,7 +163,11 @@ export default function Product() {
             <div className="flex flex-col gap-6">
               <div className="flex flex-wrap gap-2">
                 {tags?.map((tag: string, index: number) => (
-                  <TagChip key={index} label={tag} inventory={(product as any).totalInventory} />
+                  <TagChip
+                    key={index}
+                    label={tag}
+                    availableForSale={selectedVariant?.availableForSale}
+                  />
                 ))}
               </div>
 
@@ -303,7 +308,6 @@ const PRODUCT_FRAGMENT = `#graphql
     handle
     descriptionHtml
     description
-    totalInventory
     tags
     specifications: metafield(namespace: "custom", key: "specifications") {
       value
@@ -356,15 +360,21 @@ const PRODUCT_QUERY = `#graphql
 ` as const;
 
 const BEST_SELLERS_STORE_QUERY = `#graphql
-  query BestSellersStore($country: CountryCode, $language: LanguageCode)
+  query BestSellersStoreProductPage($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     products(first: 8, sortKey: BEST_SELLING) {
       nodes {
         id
+        availableForSale
         handle
         title
         tags
-        totalInventory
+        collections(first: 10) {
+          nodes {
+            handle
+            title
+          }
+        }
         featuredImage {
           id
           altText
