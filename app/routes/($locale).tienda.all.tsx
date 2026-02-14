@@ -6,7 +6,10 @@ import { ProductItem } from '~/components/ProductItem';
 import type { CollectionItemFragment } from 'storefrontapi.generated';
 
 export const meta: Route.MetaFunction = () => {
-  return [{ title: 'Translate3D | Productos' }];
+  return [
+    { title: 'Translate3D | Todos los Productos' },
+    { name: 'description', content: 'Todos los productos disponibles en Translate3D. Encuentra filamentos PLA, ABS, PETG, resinas, modelos 3D listos para imprimir y refacciones.' },
+  ];
 };
 
 export async function loader(args: Route.LoaderArgs) {

@@ -15,8 +15,11 @@ import { SectionSeparator } from '~/components/SectionSeparator';
 
 export const meta: Route.MetaFunction = () => {
   return [
-    { title: 'Translate3D | Inicio' },
-    { name: 'description', content: 'Impresi\u00f3n 3D, filamentos, resinas y refacciones.' },
+    { title: 'Translate3D | Impresión 3D, Filamentos, Resinas y Modelado' },
+    { name: 'description', content: 'Translate3D: tu tienda especializada en impresión 3D en México. Filamentos, resinas, refacciones, modelos 3D y servicios profesionales de impresión y modelado. Tus ideas, en tus manos.' },
+    { property: 'og:title', content: 'Translate3D | Impresión 3D, Filamentos, Resinas y Modelado' },
+    { property: 'og:description', content: 'Tu tienda especializada en impresión 3D en México. Filamentos, resinas, refacciones y servicios profesionales.' },
+    { property: 'og:type', content: 'website' },
   ];
 };
 

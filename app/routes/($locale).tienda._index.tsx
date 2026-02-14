@@ -5,7 +5,10 @@ import { BestSellers } from '~/components/landing/BestSellers';
 import { SectionSeparator } from '~/components/SectionSeparator';
 
 export const meta: Route.MetaFunction = () => {
-  return [{ title: 'Translate3D | Tienda' }];
+  return [
+    { title: 'Translate3D | Tienda de Impresión 3D' },
+    { name: 'description', content: 'Explora la tienda de Translate3D: filamentos, resinas, modelos 3D, refacciones y todo lo que necesitas para impresión 3D en México.' },
+  ];
 };
 
 export async function loader(args: Route.LoaderArgs) {

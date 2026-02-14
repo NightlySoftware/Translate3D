@@ -1,7 +1,10 @@
-import type {Route} from './+types/($locale).sobre-nosotros';
+import type { Route } from './+types/($locale).sobre-nosotros';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Translate3D | Sobre Nosotros'}];
+  return [
+    { title: 'Translate3D | Sobre Nosotros' },
+    { name: 'description', content: 'Conoce a Translate3D: nuestro equipo, misión y pasión por la impresión 3D en México. Transformamos ideas en objetos reales con tecnología de vanguardia.' },
+  ];
 };
 
 export default function SobreNosotrosRoute() {

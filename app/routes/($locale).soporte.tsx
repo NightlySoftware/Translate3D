@@ -1,7 +1,10 @@
-import type {Route} from './+types/($locale).soporte';
+import type { Route } from './+types/($locale).soporte';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Translate3D | Soporte'}];
+  return [
+    { title: 'Translate3D | Soporte' },
+    { name: 'description', content: 'Necesitas ayuda? Contacta al equipo de soporte de Translate3D. Resolvemos tus dudas sobre impresión 3D, pedidos y servicios.' },
+  ];
 };
 
 export default function SoporteRoute() {

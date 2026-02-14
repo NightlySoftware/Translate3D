@@ -9,7 +9,10 @@ import { redirectIfHandleIsLocalized } from '~/lib/redirect';
 import { useMemo, useState } from 'react';
 
 export const meta: Route.MetaFunction = ({ data }: { data: any }) => {
-  return [{ title: `Translate3D | ${data?.blog.title ?? 'Blog'}` }];
+  return [
+    { title: `Translate3D | ${data?.blog.title ?? 'Blog'}` },
+    { name: 'description', content: 'Blog de Translate3D: artículos, guías y novedades sobre impresión 3D, filamentos, resinas, diseño y tecnología de fabricación aditiva.' },
+  ];
 };
 
 const BLOG_FILTERS = [

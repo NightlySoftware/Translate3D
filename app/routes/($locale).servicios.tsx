@@ -1,4 +1,4 @@
-import {Suspense, useEffect, useState} from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import {
   Await,
@@ -13,15 +13,20 @@ import {
 } from 'react-router';
 import type { Route } from './+types/($locale).servicios';
 import { Button } from '~/components/ui/button';
-import {BestSellers, type BestSellerProduct} from '~/components/landing/BestSellers';
-import {SectionSeparator} from '~/components/SectionSeparator';
+import { BestSellers, type BestSellerProduct } from '~/components/landing/BestSellers';
+import { SectionSeparator } from '~/components/SectionSeparator';
 import {
   createServiceQuoteRequest,
   generateQuoteOrderId,
 } from '~/lib/serviceQuotes.server';
 
 export const meta: Route.MetaFunction = () => {
-  return [{ title: 'Translate3D | Servicios' }];
+  return [
+    { title: 'Translate3D | Servicios de Impresión 3D y Modelado' },
+    { name: 'description', content: 'Servicios profesionales de impresión 3D y modelado 3D a medida. Cotiza tu proyecto con Translate3D y lleva tus ideas al mundo físico.' },
+    { property: 'og:title', content: 'Translate3D | Servicios de Impresión 3D y Modelado' },
+    { property: 'og:description', content: 'Servicios profesionales de impresión 3D y modelado 3D a medida. Cotiza tu proyecto hoy.' },
+  ];
 };
 
 type ServiceMode = 'modelado' | 'impresion';
@@ -150,7 +155,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   const customer = await getLoggedInCustomer(context);
   const bestSellers = context.storefront
     .query(SERVICES_BEST_SELLERS_QUERY, {
-      variables: {first: 12},
+      variables: { first: 12 },
       cache: context.storefront.CacheShort(),
     })
     .then((res) => res.products.nodes as unknown as BestSellerProduct[])

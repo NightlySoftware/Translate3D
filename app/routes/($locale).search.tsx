@@ -1,55 +1,58 @@
-import {Analytics, getPaginationVariables} from '@shopify/hydrogen';
-import type {ProductSortKeys} from '@shopify/hydrogen/storefront-api-types';
-import type {PredictiveSearchQuery} from 'storefrontapi.generated';
-import {Link, useLoaderData, useSearchParams} from 'react-router';
-import type {Route} from './+types/($locale).search';
-import {Button} from '~/components/ui/button';
-import {ChevronDown} from 'lucide-react';
+import { Analytics, getPaginationVariables } from '@shopify/hydrogen';
+import type { ProductSortKeys } from '@shopify/hydrogen/storefront-api-types';
+import type { PredictiveSearchQuery } from 'storefrontapi.generated';
+import { Link, useLoaderData, useSearchParams } from 'react-router';
+import type { Route } from './+types/($locale).search';
+import { Button } from '~/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-import {ProductItem} from '~/components/ProductItem';
-import {TagChip} from '~/components/landing/TagChip';
+import { PaginatedResourceSection } from '~/components/PaginatedResourceSection';
+import { ProductItem } from '~/components/ProductItem';
+import { TagChip } from '~/components/landing/TagChip';
 import {
   getEmptyPredictiveSearchResult,
   type PredictiveSearchReturn,
 } from '~/lib/search';
 
-export const meta: Route.MetaFunction = () => [{title: 'Translate3D | Buscar en tienda'}];
+export const meta: Route.MetaFunction = () => [
+  { title: 'Translate3D | Buscar en tienda' },
+  { name: 'description', content: 'Encuentra filamentos, resinas, modelos 3D y refacciones en la tienda de Translate3D.' },
+];
 
 type SearchLoaderData =
   | PredictiveSearchReturn
   | {
-      type: 'regular';
-      term: string;
-      sort: string;
-      available: boolean;
-      queryString: string;
-      products: {
-        nodes: Array<any>;
-        pageInfo: {
-          hasNextPage: boolean;
-          hasPreviousPage: boolean;
-          startCursor: string | null;
-          endCursor: string | null;
-        };
+    type: 'regular';
+    term: string;
+    sort: string;
+    available: boolean;
+    queryString: string;
+    products: {
+      nodes: Array<any>;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor: string | null;
+        endCursor: string | null;
       };
-      totalCount: number;
     };
+    totalCount: number;
+  };
 
-export async function loader({request, context}: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const isPredictive = url.searchParams.has('predictive');
 
   if (isPredictive) {
-    return predictiveSearch({request, context});
+    return predictiveSearch({ request, context });
   }
 
-  return regularSearchProducts({request, context});
+  return regularSearchProducts({ request, context });
 }
 
 export default function SearchPage() {
@@ -189,7 +192,7 @@ export default function SearchPage() {
               resourcesClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
               resourceName="productos"
             >
-              {({node: product, index}) => (
+              {({ node: product, index }) => (
                 <div
                   key={product.id}
                   className="border-b border-r border-dark last:border-r-0 md:[&:nth-child(2n)]:border-r-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(3n)]:border-r-0 xl:[&:nth-child(3n)]:border-r xl:[&:nth-child(4n)]:border-r-0"
@@ -223,22 +226,22 @@ export default function SearchPage() {
   );
 }
 
-async function regularSearchProducts({request, context}: Pick<Route.LoaderArgs, 'request' | 'context'>) {
-  const {storefront} = context;
+async function regularSearchProducts({ request, context }: Pick<Route.LoaderArgs, 'request' | 'context'>) {
+  const { storefront } = context;
   const url = new URL(request.url);
   const params = url.searchParams;
   const term = String(params.get('q') || '').trim();
   const sort = String(params.get('sort') || '').trim();
   const available = params.get('available') === 'true';
-  const paginationVariables = getPaginationVariables(request, {pageBy: 12});
+  const paginationVariables = getPaginationVariables(request, { pageBy: 12 });
 
-  const {sortKey, reverse} = resolveProductSort(sort, term);
+  const { sortKey, reverse } = resolveProductSort(sort, term);
   const queryParts: string[] = [];
   if (term.length > 0) queryParts.push(term);
   if (available) queryParts.push('available_for_sale:true');
   const queryString = queryParts.join(' AND ');
 
-  const {products} = await storefront.query(SEARCH_PRODUCTS_QUERY, {
+  const { products } = await storefront.query(SEARCH_PRODUCTS_QUERY, {
     variables: {
       ...paginationVariables,
       query: queryString || null,
@@ -295,12 +298,12 @@ function resolveProductSort(sort: string, term: string) {
       break;
   }
 
-  return {sortKey, reverse};
+  return { sortKey, reverse };
 }
 
 function resolveCollectionHandle(product: {
   collections?: {
-    nodes?: Array<{handle?: string | null}>;
+    nodes?: Array<{ handle?: string | null }>;
   };
 }) {
   const handles =
@@ -513,18 +516,18 @@ async function predictiveSearch({
   request,
   context,
 }: Pick<Route.ActionArgs, 'request' | 'context'>): Promise<PredictiveSearchReturn> {
-  const {storefront} = context;
+  const { storefront } = context;
   const url = new URL(request.url);
   const term = String(url.searchParams.get('q') || '').trim();
   const limit = Number(url.searchParams.get('limit') || 10);
   const type = 'predictive';
 
-  if (!term) return {type, term, result: getEmptyPredictiveSearchResult()};
+  if (!term) return { type, term, result: getEmptyPredictiveSearchResult() };
 
   const {
     predictiveSearch: items,
     errors,
-  }: PredictiveSearchQuery & {errors?: Array<{message: string}>} = await storefront.query(PREDICTIVE_SEARCH_QUERY, {
+  }: PredictiveSearchQuery & { errors?: Array<{ message: string }> } = await storefront.query(PREDICTIVE_SEARCH_QUERY, {
     variables: {
       limit,
       limitScope: 'EACH',
@@ -533,7 +536,7 @@ async function predictiveSearch({
   });
 
   if (errors) {
-    throw new Error(`Shopify API errors: ${errors.map(({message}) => message).join(', ')}`);
+    throw new Error(`Shopify API errors: ${errors.map(({ message }) => message).join(', ')}`);
   }
 
   if (!items) {
@@ -541,6 +544,6 @@ async function predictiveSearch({
   }
 
   const total = Object.values(items).reduce((acc: number, item: Array<unknown>) => acc + item.length, 0);
-  return {type, term, result: {items, total}};
+  return { type, term, result: { items, total } };
 }
 
