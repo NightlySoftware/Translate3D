@@ -18,6 +18,7 @@ export default defineConfig({
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
   },
+  assetsInclude: ['**/*.glb', '**/*.gltf'],
   ssr: {
     optimizeDeps: {
       /**

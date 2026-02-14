@@ -3,10 +3,11 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { useRef } from 'react';
 import type { Group } from 'three';
+import cubeModelUrl from '~/assets/models/cube.glb?url';
 
 function Cube({ scale = 0.012 }: { scale?: number }) {
   const groupRef = useRef<Group>(null);
-  const { scene } = useGLTF('/models/cube.gltf') as unknown as { scene: Group };
+  const { scene } = useGLTF(cubeModelUrl) as unknown as { scene: Group };
 
   useFrame(() => {
     if (groupRef.current) {
@@ -17,7 +18,7 @@ function Cube({ scale = 0.012 }: { scale?: number }) {
   return <primitive object={scene} scale={scale} ref={groupRef} />;
 }
 
-useGLTF.preload('/models/cube.gltf');
+useGLTF.preload(cubeModelUrl);
 
 export default function RotatingCubeClient() {
   return (
