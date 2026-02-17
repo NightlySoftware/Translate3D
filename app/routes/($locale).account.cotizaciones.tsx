@@ -1,7 +1,7 @@
 import { data, Link, Outlet, redirect, useLoaderData, useLocation, useNavigate } from 'react-router';
 import { useMemo, useState } from 'react';
 import type { Route } from './+types/($locale).account.cotizaciones';
-import { listServiceQuoteRequests } from '~/lib/serviceQuotes.server';
+import { listServiceQuoteRequests, type ServiceQuoteRecord } from '~/lib/serviceQuotes.server';
 import { AccountSectionLayout } from '~/components/account/AccountSectionLayout';
 import { TagChip } from '~/components/landing/TagChip';
 import { Input } from '~/components/ui/input';
@@ -21,30 +21,45 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const isLoggedIn = await context.customerAccount.isLoggedIn();
-  if (!isLoggedIn) {
-    return redirect('/account/login');
-  }
+  try {
+    const isLoggedIn = await context.customerAccount.isLoggedIn();
+    if (!isLoggedIn) {
+      return redirect('/account/login');
+    }
 
-  const { data: customerData, errors } = await context.customerAccount.query(
-    SERVICE_QUOTE_CUSTOMER_QUERY,
-    {
-      variables: {
-        language: context.customerAccount.i18n.language,
+    const { data: customerData, errors } = await context.customerAccount.query(
+      SERVICE_QUOTE_CUSTOMER_QUERY,
+      {
+        variables: {
+          language: context.customerAccount.i18n.language,
+        },
       },
-    },
-  );
+    );
 
-  if (errors?.length || !customerData?.customer?.id) {
-    throw new Response('No se pudo obtener el cliente', { status: 400 });
+    if (errors?.length || !customerData?.customer?.id) {
+      throw new Error('No se pudo obtener el cliente');
+    }
+
+    const quotes = await listServiceQuoteRequests(context.env, {
+      customerId: customerData.customer.id,
+      first: 100,
+    });
+
+    return data({ quotes, loadError: null as string | null });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    const authLikeError =
+      /token|unauth|authoriz|login|session|credential|forbidden|401|403/i.test(message);
+
+    if (authLikeError) {
+      return redirect('/account/login');
+    }
+
+    return data({
+      quotes: [] as ServiceQuoteRecord[],
+      loadError: 'No fue posible cargar tus cotizaciones en este momento.',
+    });
   }
-
-  const quotes = await listServiceQuoteRequests(context.env, {
-    customerId: customerData.customer.id,
-    first: 100,
-  });
-
-  return data({ quotes });
 }
 
 function formatDate(value: string) {
@@ -98,8 +113,19 @@ function sortLabel(sort: QuoteSort) {
   }
 }
 
+function normalizeQuote(raw: ServiceQuoteRecord): ServiceQuoteRecord {
+  return {
+    ...raw,
+    orderId: String(raw.orderId || 'N/A'),
+    serviceMode: (raw.serviceMode ? String(raw.serviceMode) : 'impresion') as ServiceQuoteRecord['serviceMode'],
+    status: String(raw.status || 'PENDING'),
+    summary: String(raw.summary || ''),
+    requestedAt: String(raw.requestedAt || raw.updatedAt || new Date().toISOString()),
+  };
+}
+
 export default function AccountQuotesRoute() {
-  const { quotes } = useLoaderData<typeof loader>();
+  const { quotes, loadError } = useLoaderData<typeof loader>();
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<QuoteSort>('fecha_desc');
   const location = useLocation();
@@ -109,7 +135,7 @@ export default function AccountQuotesRoute() {
     const search = q.trim().toLowerCase();
     const hasSearch = search.length > 0;
 
-    const rows = quotes.filter((quote) => {
+    const rows = quotes.map(normalizeQuote).filter((quote) => {
       if (!hasSearch) return true;
       return (
         quote.orderId.toLowerCase().includes(search) ||
@@ -199,6 +225,12 @@ export default function AccountQuotesRoute() {
           </Button>
         </fieldset>
       </div>
+
+      {loadError ? (
+        <div className="mt-4 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-dark">
+          {loadError}
+        </div>
+      ) : null}
 
       {filteredQuotes.length === 0 ? (
         <div className="mt-4 rounded-xl border border-dark/10 bg-light p-4">

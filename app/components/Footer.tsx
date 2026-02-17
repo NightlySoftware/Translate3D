@@ -263,11 +263,11 @@ const FALLBACK_FOOTER_MENU = {
     {
       id: 'footer-nosotros',
       title: 'NOSOTROS',
-      url: '/sobre-nosotros',
+      url: '/blog',
       items: [
-        { id: 'n-1', title: 'Nuestra historia', url: '/sobre-nosotros' },
-        { id: 'n-2', title: 'Nuestro compromiso', url: '/sobre-nosotros' },
-        { id: 'n-3', title: 'Equipo', url: '/sobre-nosotros' },
+        { id: 'n-1', title: 'Nuestra historia', url: '/blog' },
+        { id: 'n-2', title: 'Nuestro compromiso', url: '/blog' },
+        { id: 'n-3', title: 'Equipo', url: '/blog' },
       ],
     },
     {
