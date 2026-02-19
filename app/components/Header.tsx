@@ -184,14 +184,14 @@ function HoverDropdown({
 
 /* ────────────────────────── Search bar (inline) ─────────────────────── */
 
-function SearchBar() {
+function SearchBar({className}: {className?: string}) {
   const [query, setQuery] = useState('');
 
   return (
     <form
       action="/search"
       method="get"
-      className="flex items-center gap-1"
+      className={cn('flex items-center gap-1', className)}
     >
       <Input
         type="search"
@@ -306,6 +306,23 @@ function HeaderMenuMobileToggle() {
   );
 }
 
+function HeaderSearchToggle() {
+  const { open } = useAside();
+
+  return (
+    <Button
+      type="button"
+      variant="primary"
+      size="icon"
+      onClick={() => open('search')}
+      className="h-11 w-11 border-none md:hidden"
+      aria-label="Buscar"
+    >
+      <Search className="h-4 w-4" />
+    </Button>
+  );
+}
+
 /* ──────────────────────── Header CTA group ───────────────────────── */
 
 function HeaderCtas({
@@ -314,9 +331,16 @@ function HeaderCtas({
 }: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
   return (
     <div className="flex items-center gap-3">
-      <HeaderMenuMobileToggle />
-      <SearchBar />
-      <CartToggle cart={cart} />
+      <div className="order-1 md:order-2">
+        <CartToggle cart={cart} />
+      </div>
+      <div className="order-2 md:hidden">
+        <HeaderMenuMobileToggle />
+      </div>
+      <div className="order-3 md:hidden">
+        <HeaderSearchToggle />
+      </div>
+      <SearchBar className="order-1 hidden md:flex" />
       <span className="hidden md:inline-flex">
         <AccountButton isLoggedIn={isLoggedIn} />
       </span>
@@ -441,58 +465,78 @@ export function HeaderMenu({
 
   if (viewport === 'mobile') {
     return (
-      <nav className="flex flex-col gap-2" role="navigation">
-        {items.map((item) => {
-          if (!item.url) return null;
-          const url = normalizeUrl(item.url);
-          const childItems = item.items ?? [];
+      <div className="flex flex-col gap-4">
+        <form action="/search" method="get" className="flex items-center gap-2">
+          <Input
+            type="search"
+            name="q"
+            placeholder="Buscar"
+            className="h-11"
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            size="icon"
+            aria-label="Buscar"
+            className="h-11 w-11 border-none"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        </form>
 
-          return (
-            <div key={item.id} className="flex flex-col gap-1">
-              <NavLink
-                to={url}
-                onClick={close}
-                prefetch="intent"
-                className={({ isActive }) =>
-                  cn(
-                    'rounded-lg border border-dark/10 bg-light px-4 py-3 text-base font-extrabold uppercase tracking-tight text-dark',
-                    isActive && 'border-primary text-primary',
-                    focusStyle({ theme: 'dark' })
-                  )
-                }
-              >
-                {item.title}
-              </NavLink>
+        <nav className="flex flex-col gap-2" role="navigation">
+          {items.map((item) => {
+            if (!item.url) return null;
+            const url = normalizeUrl(item.url);
+            const childItems = item.items ?? [];
 
-              {childItems.length ? (
-                <div className="ml-3 flex flex-col gap-1 border-l border-dark/10 pl-3">
-                  {childItems.map((sub) => {
-                    if (!sub.url) return null;
-                    const subUrl = normalizeUrl(sub.url);
-                    return (
-                      <NavLink
-                        key={sub.id}
-                        to={subUrl}
-                        onClick={close}
-                        prefetch="intent"
-                        className={({ isActive }) =>
-                          cn(
-                            'rounded-lg px-4 py-2 text-sm font-extrabold uppercase tracking-tight text-dark/80 hover:bg-dark hover:text-light',
-                            isActive && 'text-primary',
-                            focusStyle({ theme: 'dark' })
-                          )
-                        }
-                      >
-                        {sub.title}
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </nav>
+            return (
+              <div key={item.id} className="flex flex-col gap-1">
+                <NavLink
+                  to={url}
+                  onClick={close}
+                  prefetch="intent"
+                  className={({ isActive }) =>
+                    cn(
+                      'rounded-lg border border-dark/10 bg-light px-4 py-3 text-base font-extrabold uppercase tracking-tight text-dark',
+                      isActive && 'border-primary text-primary',
+                      focusStyle({ theme: 'dark' })
+                    )
+                  }
+                >
+                  {item.title}
+                </NavLink>
+
+                {childItems.length ? (
+                  <div className="ml-3 flex flex-col gap-1 border-l border-dark/10 pl-3">
+                    {childItems.map((sub) => {
+                      if (!sub.url) return null;
+                      const subUrl = normalizeUrl(sub.url);
+                      return (
+                        <NavLink
+                          key={sub.id}
+                          to={subUrl}
+                          onClick={close}
+                          prefetch="intent"
+                          className={({ isActive }) =>
+                            cn(
+                              'rounded-lg px-4 py-2 text-sm font-extrabold uppercase tracking-tight text-dark/80 hover:bg-dark hover:text-light',
+                              isActive && 'text-primary',
+                              focusStyle({ theme: 'dark' })
+                            )
+                          }
+                        >
+                          {sub.title}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </nav>
+      </div>
     );
   }
 
