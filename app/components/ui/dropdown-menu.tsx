@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { cn } from '~/lib/utils';
-import { Slot, Slottable } from '@radix-ui/react-slot';
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
@@ -31,39 +30,19 @@ DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-    asChild?: boolean;
-  }
->(({ className, asChild = false, ...props }, ref) => {
-  const Comp = (asChild ? Slot : DropdownMenuPrimitive.Item) as any;
-  return (
-    <Comp
-      ref={ref}
-      className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-md text-sm font-semibold uppercase tracking-tight outline-none transition-all duration-300 isolate group/item overflow-hidden',
-        'text-dark data-[highlighted]:text-light focus:text-light data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-        className,
-      )}
-      {...props}
-    >
-      {/* 
-        Single child for Slot to satisfy React.Children.only. 
-        Padding is applied here to ensure it's covered by the animation.
-      */}
-      <div className="relative w-full h-full px-3 py-2 flex items-center">
-        <Slottable><span className="z-10 group-hover/item:text-light group-focus/item:text-light group-data-[highlighted]/item:text-light">{props.children}</span></Slottable>
-
-        {/* Hover Animation Background Span */}
-        <span
-          className={cn(
-            'absolute inset-0 -z-10 transform scale-y-0 transition-transform duration-300 ease-out origin-bottom bg-dark',
-            'group-hover/item:scale-y-100 group-focus/item:scale-y-100 group-data-[highlighted]/item:scale-y-100',
-          )}
-        />
-      </div>
-    </Comp>
-  );
-});
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Item
+    ref={ref}
+    className={cn(
+      'relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm font-semibold uppercase tracking-tight outline-none transition-colors',
+      'text-dark hover:bg-dark hover:text-light focus:bg-dark focus:text-light data-[highlighted]:bg-dark data-[highlighted]:text-light',
+      'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      className,
+    )}
+    {...props}
+  />
+));
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
 const DropdownMenuLabel = React.forwardRef<
